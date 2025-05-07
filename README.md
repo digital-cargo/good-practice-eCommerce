@@ -64,7 +64,7 @@ api-endpoints:
 [![GitHub](https://img.shields.io/github/license/digital-cargo/good-practice-shipment-tracking)](https://creativecommons.org/licenses/by/4.0/)
 [![Releases](https://img.shields.io/github/v/release/digital-cargo/good-practice-eCommerce)](https://github.com/digital-cargo/good-practice-eCommerce/releases)
 
-This repository contains the good practice to implement stakeholder data exchange in air cargo based on the ONE Record standard
+This repository contains the good practice to implement data exchange in the context of eCommerce air cargo based on the ONE Record standard
 
 ## Abstract
 
