@@ -64,22 +64,19 @@ api-endpoints:
 [![GitHub](https://img.shields.io/github/license/digital-cargo/good-practice-shipment-tracking)](https://creativecommons.org/licenses/by/4.0/)
 [![Releases](https://img.shields.io/github/v/release/digital-cargo/good-practice-eCommerce)](https://github.com/digital-cargo/good-practice-eCommerce/releases)
 
-This repository contains the good practice to implement data exchange in the context of eCommerce air cargo based on the ONE Record standard
+This repository contains the good practice to implement data exchange in the context of eCommerce air cargo based on the ONE Record standard.
 
 ## Abstract
 
-The logistics and cargo industry grapples with a prevalent and pressing issue: while APIs for shipment status data exchange exist, a glaring lack of standardization across them poses significant challenges. 
-The consequence of this non-uniformity is evident: stakeholders are burdened with the expensive and time-consuming task of individualized integrations, harmonization of incompatible data formats from different sources, leading to inefficiencies, misunderstandings, and subsequent maintenance costs.
+The logistics and cargo industry grapples with a prevalent and pressing issue: there is no standard to share eCommerce data throughout the supply chain. The consequence of this lack of standardization is evident: stakeholders are burdened with the expensive and time-consuming task of individualized integrations, harmonization of incompatible data formats from different sources, leading to compliance issues, inefficiencies, misunderstandings, and subsequent maintenance costs. The ONE record standard remedies this situation. This good practice document describes a sequence of required steps to share eCommerce data via ONE Record. 
 
-The ONE record standard remedies this situation.
-By endorsing a shared data model and a unified API structure, it offers a streamlined platform for shipment status data exchange. 
-This good practice document describes the methodology for providing tracking data and shipment status updates via ONE Record, making this data effortlessly accessible to others. 
+Based on the ONE Record API version 2.x.x and the ONE Record Data Model version 3.x,x, this document provides guidance on how to share eCommerce data in an easy-to-use and standardized manner.
 
-Based on the ONE Record API version 2.0.0 and the ONE Record Data Model version 3.0.0, this document provides guidance on how to provide shipment tracking data in an easy-to-use and standardized manner.
+This good practice is an outcome of the collaboration of major stakeholders within the German "Digital Testbed Air Cargo"-Consortium, sponsored by the German Federal Ministry for Digital and Transport. Lufthansa Cargo and Fraunhofer IML were in the lead.
 
 ## Introduction
 
-In the dynamic world of logistics and cargo, shipment tracking stands as a cornerstone, ensuring visibility, predictability, and trust within the supply chain. 
+In the dynamic world of logistics and cargo, eCommerce shipments set new challenges for both, the physical handling of goods and the sharing and management of data. 
 Yet, as businesses expand and systems diversify, the industry faces a challenge: the myriad of non-standardized tracking systems, each requiring unique integration and understanding. 
 This fragmentation not only complicates operations but also escalates costs and reduces efficiency.
 
@@ -119,34 +116,37 @@ By using this good practice, organizations can understand, adopt, and streamline
 
 - **Compelete implementations**: This good practice includes sample code to support knowledge transfer, it does not provide detailed implementation or out-of-the-box software.
 - **Comparison with other standards**: This good practice describes the implementation with the ONE Record Standard. A comparison with other standards in the industry is not covered.
-- **Vendor-specific implementations**: This document focuses on the standard itself and does not address specific third-party tools or solutions based on the ONE Record standard.
-- **Complete technical specifications**: This document focuses solely on the ONE Record aspects pertinent to shipment tracking and doesn't encompass the entire technical breadth of the standard.
-- **Industry-wide statistics**: This document does not provide exhaustive industry data or statistics on the adoption or performance of the ONE Record standard.
+- **Vendor-specific implementations**: This document focuses on the standard itself and does not address specific third-party tools or solutions.
+- **Complete technical specifications**: This document focuses solely on the ONE Record aspects pertinent to eCommerce data sharing and doesn't encompass the entire technical breadth of the standard.
 
-This guide is based on the published ONE Record specifications prevalent as of `2023-10-16`. 
+This guide is based on the published ONE Record specifications prevalent as of `xxxx-xx-xx`. 
 As the industry evolves, it is imperative for stakeholders to keep up to date on subsequent versions or changes to the standard.
 
 **Target audience**
 
-This document is intended for anyone interested in this topic. This can range from logistics professionals, supply chain managers, software developers, and other stakeholders involved in shipment tracking and data exchange within the logistics and cargo industry. It is designed to cater to both technical and business-oriented individuals interested in adopting standardized practices for efficient shipment tracking.
+This document is intended for anyone interested in this topic. This can range from logistics professionals, supply chain managers, software developers, and other stakeholders involved in shipment tracking and data exchange within the logistics and cargo industry. It is designed to cater to both technical and business-oriented individuals interested in adopting standardized practices for efficient eCommerce data sharing.
 
-**General definitions within Shipment Tracking**
+**General definitions within eCommerce data sharing**
 
 A `shipment` is defined as pieces under one contract and is not limited to the Air Waybill (AWB), which is used particularly in air freight. Since ONE Record aims at multimodality, this good practice should also be applicable to transport modes other than air transport.
 
-A `piece` refers to an individual item or unit of cargo that is part of a larger shipment. It could be a single package, container, pallet, or any other distinct unit that is being transported under the same contract.
+A `piece` refers to an individual item or unit of cargo that is part of a larger shipment. It could be a single package, container, pallet, or any other distinct physical unit.
+
+An `item`....
+
+A `parcel`....
 
 `GHA`: Ground Handling Agent
 
 **Geographical coverage**
 
-This shipment tracking best practice is globally applicable, unhindered by regional or national distinctions. 
+This eCommerce data sharing best practice is globally applicable, unhindered by regional or national distinctions. 
 With no legal or operational barriers to its adoption, the outlined solution is primed for worldwide deployment. 
 As a result, companies of any size, at any location, can take advantage of the standardized workflows and increased efficiencies created by ONE Record.
 
 ### Variants
 
-This section explores different scenarios within the context of the ONE Record Standard, delineating various approaches to data exchange in the realm of Shipment Tracking. These scenarios encompass diverse arrangements of data sharing and update processes among stakeholders involved in the logistics and cargo industry.
+This section explores different scenarios within the context of the ONE Record Standard, delineating various approaches to data exchange in the realm of eCommerce data sharing. These scenarios encompass diverse arrangements of data sharing and update processes among stakeholders involved in the logistics and cargo industry.
 
 #### One data holder shares data
 
