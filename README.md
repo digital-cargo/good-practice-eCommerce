@@ -186,7 +186,7 @@ Furthermore, it utilises the [ONE Record API specificaiton v2.0.0](https://iata-
 
 ### Related Good Practices
 
-The [ShipmentTracking](https://github.com/digital-cargo/good-practice-shipment-tracking) use case is closely related to the [ShipmentRecord](https://github.com/digital-cargo/good-practice-shipment-record) use case which is also based on the ONE Record standard. However, the ShipmentTracking use case is limited to the exchange of shipment status information with other parties, while the ShipmentRecord use case deals with the exchange of all shipment-related data with other parties, comparabel to today's (M)AWB and HAWB data. Thus, some of the data classes and data properties are used in both use cases.
+The [ShipmentTracking](https://github.com/digital-cargo/good-practice-shipment-tracking) use case is closely related to the [ShipmentRecord](https://github.com/digital-cargo/good-practice-shipment-record) use case which is also based on the ONE Record standard. However, the eCommerce Data Sharing use case is focused to the exchange of eCommerce related information with other parties.
 
 ### Piece-centricity and physics-orientation
 
@@ -199,13 +199,10 @@ For example, when every piece in a shipment has been loaded and the aircraft dep
 ### skeletonIndicator
 
 The [skeletonIndicator](https://onerecord.iata.org/ns/cargo#skeletonIndicator) is a specific marker or flag used within data objects in the ONE Record standard. 
-The skeletonIndicator signifies that the data object and its properties act as placeholders and do not represent granular, individual data
-points. Instead, they offer a high-level or "skeletal" representation of the data, primarily for modeling piece-level data.
+The skeletonIndicator signifies that the data object and its properties act as placeholders and do not represent granular, individual data points. Instead, they offer a high-level or "skeletal" representation of the data, primarily for modeling piece-level data.
 
-It enables piece-level modeling of shipment data in a not fully piece-level environment that is in transition, 
-but provides the basis for future developments. 
-This can be useful (1) when piece-level granularity is not required, (2) when non-integrable data sets are involved, 
-(3) or when piece-level processing is not yet feasible in physical handling operations.
+It enables piece-level modeling of shipment data in a not fully piece-level environment that is in transition, but provides the basis for future developments. 
+This can be useful (1) when piece-level granularity is not required, (2) when non-integrable data sets are involved, (3) or when piece-level processing is not yet feasible in physical handling operations.
 
 ## Data Provisioning
 
@@ -215,16 +212,15 @@ This good practice incorporates data classes of the [ONE Record cargo ontology](
 and the [ONE Record core code lists ontology](https://onerecord.iata.org/ns/coreCodeLists).
 For clarity, class inheritance and unused data properties are excluded, and only required properties and relationships are visualized in the following.
 
-
+The following explanation focus in the eCommerce-specific data exchange, other relevant objects, like the Shipment Record, as described in other Good Practices and taken as specified here.
 
 ### Data Mapping
 
-This section covers modelling and usage of classes and data elements from ONE Record data model, in particular the modelling of shipment status (also referred to as milestone or event) information 
-on shipment-level and on piece-level, and considering specific scenarios, such as split shipments - shipments handled or moved in different parts - and transit shipments.
 
-Other than ONE Record, the data structure supported and used by a Transport Management System (TMS) and other applications 
-involved in ShipmentTracking related data exchange might not (yet) support the piece centric concept. Moreover, 
-there is usually no dedicated distinction between the physical, contractual and other categories the data is related to. 
+# HERE
+This section covers modelling and usage of classes and data elements from ONE Record data model, in particular the modelling of Shipper´s data. 
+
+Other than ONE Record, the data structure supported and used by a Transport Management System (TMS) and other applications involved in ShipmentTracking related data exchange might not (yet) support the piece centric concept. Moreover, there is usually no dedicated distinction between the physical, contractual and other categories the data is related to. 
 
 This also applies to traditional messaging standards such as Cargo-IMP, Cargo-XML, internal web services, etc.
 Especially during the transition period it might therefore be required to convert data between the ONE Record standard and other 
