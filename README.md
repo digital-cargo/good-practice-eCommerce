@@ -216,6 +216,12 @@ The following explanation focus in the eCommerce-specific data exchange, other r
 
 ### Data Mapping
 
+# Product
+
+Identifyable products cannot be found in the data and are not to be used for this use case.
+
+# Item
+
 
 # HERE
 This section covers modelling and usage of classes and data elements from ONE Record data model, in particular the modelling of Shipper´s data. 
