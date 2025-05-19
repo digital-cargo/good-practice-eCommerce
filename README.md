@@ -148,30 +148,7 @@ As a result, companies of any size, at any location, can take advantage of the s
 ### Variants
 
 This section explores different scenarios within the context of the ONE Record Standard, delineating various approaches to data exchange in the realm of eCommerce data sharing. These scenarios encompass diverse arrangements of data sharing and update processes among stakeholders involved in the logistics and cargo industry.
-
-#### One data holder shares data
-
-In this variant it is assumed that ONE Record related data exchange is limited in sharing shipment status information with other parties. 
-
-LogisticsObject and LogisticsEvent data objects are created and updated by the party sharing the data which is usually the operating carrier.
-Since all updates to the data objects are triggered by the same party, the [ChangeRequest](https://onerecord.iata.org/ns/api#ChangeRequest) approval process is not required in this case.
-
-#### One data holder shares and receives updates
- 
-Shipment tracking information can also be utilized by one party to prompt updates to the status of a shipment and its related data at another party, such as a GHA.
-
-For example, this is applicable when a GHA shares ShipmentTracking information with a carrier he is handling. Updates to logistics object owned by a different party are subject to the ONE Record Change Request process.
-
-
-#### Multiple data holders share data and receive updates
-
-In this scenario, one entity, such as a freight forwarder, shipper, or another relevant party, utilizes ONE Record to publish LogisticsObjects data. Subsequently, other entities establish connections with these LogisticsObjects, facilitating data updates for all parties involved.
-
-This variant requires that the ONE Record Change Request process is kept to whenever an existing logistics object is updated by another party which is not the data holder.
-
-Let us look at an example where a forwarder publishes waybill, shipment and piece data objects and a carrier contributes shipment tracking data in the form of LogisticsEvents and/or corrects weights. As a consequence, the freight forwarder would have to request a change in the weights of the freight forwarder's packages via the [ONE Record ChangeRequest mechanism](https://iata-cargo.github.io/ONE-Record/logistics-objects/#update-a-logistics-object).
-
-This variant is also called the [ShipmentRecord](https://github.com/digital-cargo/good-practice-shipment-record) exchange use case. Therefore, there is some overlap as some logistics objects used for the use case ShipmentRecord are also used for the use case ShipmentTracking, e.g. quantity details of the shipment.
+(...)
 
 ## Background
 
@@ -204,6 +181,26 @@ The skeletonIndicator signifies that the data object and its properties act as p
 It enables piece-level modeling of shipment data in a not fully piece-level environment that is in transition, but provides the basis for future developments. 
 This can be useful (1) when piece-level granularity is not required, (2) when non-integrable data sets are involved, (3) or when piece-level processing is not yet feasible in physical handling operations.
 
+## Business Process
+
+### Shipper
+The process starts by the Shipper providing the information on the items to be transported. Theoretically, the process could also be started by an order of the consignee, but the application of this process is unlikely, as the order of the consignee is usually not managed by the TMS.
+
+From a conceptual side, 
+
+sequenceDiagram
+    participant Trucker TMS
+    participant Trucker ONE Record Server
+    participant GHA ONE Record Server
+    participant GHA TMS
+    autonumber
+    Trucker TMS->>+Trucker ONE Record Server: Create location "FRA GHA Trucking Gate"
+    GHA ONE Record Server->>+Trucker ONE Record Server: SUB on location "FRA GHA Trucking Gate"
+    GHA TMS->>+GHA ONE Record Server: Create location "FRA GHA Truck Dock 1"
+    GHA TMS->>+GHA ONE Record Server: Create location "FRA GHA Truck Dock 2"
+    GHA ONE Record Server->>+Trucker ONE Record Server: SUB on all "ServiceRequests"
+
+
 ## Data Provisioning
 
 ### Data Model
@@ -216,14 +213,14 @@ The following explanation focus in the eCommerce-specific data exchange, other r
 
 ### Data Mapping
 
-# Product
+#### Product
 
 Identifyable products cannot be found in the data and are not to be used for this use case.
 
-# Item
+#### Item
 
 
-# HERE
+#### HERE
 This section covers modelling and usage of classes and data elements from ONE Record data model, in particular the modelling of Shipper´s data. 
 
 Other than ONE Record, the data structure supported and used by a Transport Management System (TMS) and other applications involved in ShipmentTracking related data exchange might not (yet) support the piece centric concept. Moreover, there is usually no dedicated distinction between the physical, contractual and other categories the data is related to. 
