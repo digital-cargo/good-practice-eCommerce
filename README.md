@@ -1043,7 +1043,18 @@ _(sorted alphabetically)_
 > Every good practice is the result of the work of the community, and therefore the contribution of each individual should be recognized and appreciated. 
 > Below is a list of all the people who have actively contributed to this good practice.
 
+- Ajay Manoharan, Qatar Airways
 - Arnaud Lambert, IATA
+- Bilel Chakroun, Air France-KLM
+- [Hendrik Gruber](https://github.com/HendrikLH), Lufthansa Industry Solutions
+- Josh Priebe, Air Canada
+- Keith Lam, GLS HKG 
+- Mark Belliss, British Telecom 
+- Martin Fowler, MDF Solutions
+- [Martin Skopp](https://github.com/mskopp), Riege Software
+- Mary Stradling, DHL
+- Matthias Hurst, Colog AG
+- Pramod Rao, Nexshore Technologies
 - [Ying Lu](https://github.com/luyinglu), Lufthansa Industry Solutions
 
 _(sorted alphabetically)_
