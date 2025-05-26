@@ -69,7 +69,7 @@ This repository contains the good practice to implement data exchange in the con
 
 ## Abstract
 
-The logistics and cargo industry grapples with a prevalent and pressing issue: there is no standard to share eCommerce data throughout the supply chain. The consequence of this lack of standardization is evident: stakeholders are burdened with the expensive and time-consuming task of individualized integrations, harmonization of incompatible data formats from different sources, leading to compliance issues, inefficiencies, misunderstandings, and subsequent maintenance costs. The ONE record standard remedies this situation. This good practice document describes a sequence of required steps to share eCommerce data via ONE Record. 
+ECommerce is a constantly growing commodity with unprecidented challengedes to both, the physical handling and the data management to ensure compliance, safety and efficiency. But the logistics and cargo industry grapples with a prevalent and pressing issue: there is no standard to share eCommerce data sharing throughout the supply chain. The consequence of this lack of standardization is evident: stakeholders are burdened with the expensive and time-consuming task of individualized integrations, harmonization of incompatible data formats from different sources, leading to compliance issues, inefficiencies, misunderstandings, and subsequent maintenance costs. The ONE record standard remedies this situation. This good practice document describes a sequence of required steps to share eCommerce data via ONE Record. 
 
 Based on the ONE Record API version 2.x.x and the ONE Record Data Model version 3.x,x, this document provides guidance on how to share eCommerce data in an easy-to-use and standardized manner.
 
@@ -77,30 +77,17 @@ This good practice is an outcome of the collaboration of major stakeholders with
 
 ## Introduction
 
-In the dynamic world of logistics and cargo, eCommerce shipments set new challenges for both, the physical handling of goods and the sharing and management of data. 
-Yet, as businesses expand and systems diversify, the industry faces a challenge: the myriad of non-standardized tracking systems, each requiring unique integration and understanding. 
-This fragmentation not only complicates operations but also escalates costs and reduces efficiency.
+DTAC intro
 
-Initiated and moderated by the International Air Transportation Association (IATA), in 2022, major stakeholders of the supply chain decided to aim for a renewed data sharing infrastructure for the global logistics networks by 2026.
-Enter the ONE Record standard, which aims to unify, streamline and improve shipping data across the industry. 
-By leveraging the ONE Record standard, stakeholders can draw on a unified data model and API that promotes seamless integration across various platforms and improves collaboration between various organizations. 
+In the dynamic world of logistics and cargo, eCommerce shipments set new challenges for both, the physical handling of goods and the sharing and management of data. Yet, as businesses expand and systems diversify, the industry faces a challenge: the myriad of non-standardized tracking systems, each requiring unique integration and understanding. This fragmentation not only complicates operations but also escalates costs and reduces efficiency.
+
+Initiated and moderated by the International Air Transportation Association (IATA), ONE Record aims to be the standard to enable and simplify data sharing in  transportation industry. By leveraging the ONE Record standard, stakeholders can draw on a unified data model and API that promotes seamless integration across various platforms and improves collaboration between various organizations. 
 This standardization comes with a number of benefits, from reducing the complexity and cost of custom integrations to enhancing transparency and trust.
 It lays the foundation for standardization, enabling a consistent data model and API across diverse platforms, thereby streamlining integrations and collaborations.
 This uniformity heightens transparency, allowing stakeholders to effortlessly interpret shipment data, fostering trust throughout the supply chain.
 Moreover, the standardized approach curtails complexities tied to integration, conserving both time and resources that might otherwise be diverted to bespoke solutions. 
 
-As a first step, some parties agreed to implement a shipment tracking API in 2023 based on the novel ONE Record data standard.
-The use case is not limited to carriers. As described below, there is also a place for data platform, shippers and many other stakeholders to apply this use case.
-
-As a first step, some parties have agreed to introduce an API for shipment tracking based on the new ONE Record data standard in 2023.
-The user group is not limited to freight forwarders; data platforms, shippers and many other players can also participate and use it.
-
-Within the realm of shipment tracking data exchange, it's assumed that at least one stakeholder in the supply chain can report shipment progress, 
-while others are keen on accessing this data using unique shipment IDs. And, that all of these parties agree on ONE Record as the standard for information exchange.
-
-The purpose of this document is to explain how shipment tracking data exchange can be implemented using ONE Record.
-Among other things, the goal is to highlight ONE Record's unique value proposition and motivate technical and business audiences to move to this standardized approach.
-Readers will gain a comprehensive understanding of how ONE Record is revolutionizing shipment tracking, making it more efficient, accessible, and future-ready.
+The purpose of this document is to explain how eCommerce data can be shared most efficiently by using ONE Record. Among other things, the goal is to highlight ONE Record's unique value proposition and motivate technical and business audiences to move to this standardized approach.
 
 ### Scope
 
@@ -122,6 +109,10 @@ By using this good practice, organizations can understand, adopt, and streamline
 
 This guide is based on the published ONE Record specifications prevalent as of `xxxx-xx-xx`. 
 As the industry evolves, it is imperative for stakeholders to keep up to date on subsequent versions or changes to the standard.
+
+The interpretations is following 
+
+bertoldo alex-anwalt.de
 
 **Target audience**
 
@@ -181,24 +172,45 @@ The skeletonIndicator signifies that the data object and its properties act as p
 It enables piece-level modeling of shipment data in a not fully piece-level environment that is in transition, but provides the basis for future developments. 
 This can be useful (1) when piece-level granularity is not required, (2) when non-integrable data sets are involved, (3) or when piece-level processing is not yet feasible in physical handling operations.
 
-## Business Process
+## Business Process and Data Exchange
+
+### Process overview
+
+
+```mermaid
+sequenceDiagram
+	
+    participant eCommerce Shipper
+    participant Forwarder
+    participant Cargo Handling Agent 
+    participant Carrier 
+    participant Customs
+    participant Consignee
+
+	 rect rgb(191, 223, 255)
+	 eCommerce Shipper->> Forwarder: provide physical freight (pieces)
+	 Forwarder->> Forwarder: Build boxes out of parcels, build up BUPs
+	 Forwarder->> Cargo Handling Agent: provide physical freight (BUPs)
+	 Cargo Handling Agent->> Cargo Handling Agent: Perform Goods Acceptance
+	 Cargo Handling Agent->>Carrier: Load A/C
+	 Carrier->>Carrier: Perform air segment (DEP, ARR), unload A/C
+	 Carrier->>Carrier: automated scan of boxes ("Zollgestellung")
+	 alt Zollbeschau "yes"
+		Carrier->>Customs: Separate Boxes, transport to customs
+	 	end
+    Carrier->>Carrier: Check for Customs Status
+    alt Import customs done
+	   Carrier->>Consignee: Handover
+    end
+	 
+```
+
 
 ### Shipper
 The process starts by the Shipper providing the information on the items to be transported. Theoretically, the process could also be started by an order of the consignee, but the application of this process is unlikely, as the order of the consignee is usually not managed by the TMS.
 
 From a conceptual side, 
 
-sequenceDiagram
-    participant Trucker TMS
-    participant Trucker ONE Record Server
-    participant GHA ONE Record Server
-    participant GHA TMS
-    autonumber
-    Trucker TMS->>+Trucker ONE Record Server: Create location "FRA GHA Trucking Gate"
-    GHA ONE Record Server->>+Trucker ONE Record Server: SUB on location "FRA GHA Trucking Gate"
-    GHA TMS->>+GHA ONE Record Server: Create location "FRA GHA Truck Dock 1"
-    GHA TMS->>+GHA ONE Record Server: Create location "FRA GHA Truck Dock 2"
-    GHA ONE Record Server->>+Trucker ONE Record Server: SUB on all "ServiceRequests"
 
 
 ## Data Provisioning
