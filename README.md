@@ -172,7 +172,7 @@ The skeletonIndicator signifies that the data object and its properties act as p
 It enables piece-level modeling of shipment data in a not fully piece-level environment that is in transition, but provides the basis for future developments. 
 This can be useful (1) when piece-level granularity is not required, (2) when non-integrable data sets are involved, (3) or when piece-level processing is not yet feasible in physical handling operations.
 
-## Business Process and Data Exchange
+## Business Process and Data Sharing
 
 ### Process overview
 
@@ -183,44 +183,51 @@ sequenceDiagram
     participant eCommerce Shipper
     participant Forwarder
     participant Cargo Handling Agent 
+    participant ONE Record Data Layer
     participant Carrier 
     participant Customs
     participant Consignee
 
 	 eCommerce Shipper->> Forwarder: provide physical freight (pieces)
+	 Note over ONE Record Data Layer: (virtual data layer as actor) 
+	 eCommerce Shipper-->> ONE Record Data Layer: Shares products, items, pieces
+	 ONE Record Data Layer-->>	Forwarder: Gets notified on products, items, pieces 
 	 Forwarder->> Forwarder: Build boxes out of parcels, build up BUPs
+	 Forwarder-->> ONE Record Data Layer: Shares AWB, ULD data
+	 ONE Record Data Layer-->>	Cargo Handling Agent: Gets notified on products, items, pieces, AWB, ULD
+	 ONE Record Data Layer-->>	Carrier: Gets notified on products, items, pieces, AWB, ULD
+	 ONE Record Data Layer-->>	Customs: Gets notified on products, items, pieces to be imported
+	 Customs-->>ONE Record Data Layer: Provides PLACI status on piece-level
+	 ONE Record Data Layer-->>	Cargo Handling Agent: Gets notified on PLACI-Status
 	 Forwarder->> Cargo Handling Agent: provide physical freight (BUPs)
 	 Cargo Handling Agent->> Cargo Handling Agent: Perform Goods Acceptance
+	 Cargo Handling Agent-->>ONE Record Data Layer: Provide status update RCS
 	 Cargo Handling Agent->>Carrier: Load A/C
 	 Carrier->>Carrier: Perform air segment (DEP, ARR), unload A/C
-	 Carrier->>Carrier: automated scan of boxes ("Zollgestellung")
-	 alt Zollbeschau "yes"
-		Carrier->>Customs: Separate Boxes, transport to customs
+#	 Carrier-->>ONE Record Data Layer: Provide status update DEP, ARR
+	 Carrier->>Carrier: automated scan of boxes (customs presentation)
+	 Carrier-->>ONE Record Data Layer: Provide customs presentation status update
+	 ONE Record Data Layer-->>Customs: Gets notified on customs presentation status update
+	 Customs-->>ONE Record Data Layer: Provides customs presentation required status 
+	 alt customs presentation required
+		Carrier->>Customs: Separate Boxes, transport to customs, perform presentation
+		Customs-->>ONE Record Data Layer: share updated customs presentation required status
 	 	end
-    Carrier->>Carrier: Check for Customs Status
-    alt Import customs done
-	   Carrier->>Consignee: Handover
+    Carrier->>Carrier: Check for Import customs Status
+    Customs-->>ONE Record Data Layer: Provide Import customs Status
+    Carrier->>Consignee: customs status ok: Handover to C´nee
+    alt Import customs status nok
+	   Carrier->>Carrier: Wait for ok
     end
 	 
 ```
 
-```mermaid
-flowchart TD
-    A[eCommerce Shipper provides parcels] --> B[Forwarder builds boxes and BUPs]
-    B --> C[Forwarder delivers BUPs to Cargo Handling Agent]
-    C --> D[Goods Acceptance by Cargo Handling Agent]
-    D --> E[Cargo Handling Agent loads aircraft]
-    E --> F[Carrier performs air segment (DEP, ARR)]
-    F --> G[Carrier unloads and scans boxes ("Zollgestellung")]
-    G --> H{Zollbeschau required?}
-    H -- Yes --> I[Carrier separates boxes, transports to Customs]
-    H --> J[Carrier checks customs status]
-    J --> K{Import customs cleared?}
-    K -- Yes --> L[Carrier hands over to Consignee]
-    K -- No --> M[Wait for customs clearance]
-```
-
-
+#### Remarks
+* The role "Carrier" includes the import Cargo Handling Agent role at the carrier hub, which is - in this case - also the import station 
+* Full line: physical flow
+* Dotted line: information flow
+* Notifications (PUB/SUB) are only mentioned when essential for the process; further notification, e.g. for the shipper, providing a significant additional benefit through improved transparency, are not mentioned here.
+* The process is designed around the current data types, it does not reflect a data-centric green-field approach 
 
 ### Shipper
 The process starts by the Shipper providing the information on the items to be transported. Theoretically, the process could also be started by an order of the consignee, but the application of this process is unlikely, as the order of the consignee is usually not managed by the TMS.
@@ -1036,18 +1043,7 @@ _(sorted alphabetically)_
 > Every good practice is the result of the work of the community, and therefore the contribution of each individual should be recognized and appreciated. 
 > Below is a list of all the people who have actively contributed to this good practice.
 
-- Ajay Manoharan, Qatar Airways
 - Arnaud Lambert, IATA
-- Bilel Chakroun, Air France-KLM
-- [Hendrik Gruber](https://github.com/HendrikLH), Lufthansa Industry Solutions
-- Josh Priebe, Air Canada
-- Keith Lam, GLS HKG 
-- Mark Belliss, British Telecom 
-- Martin Fowler, MDF Solutions
-- [Martin Skopp](https://github.com/mskopp), Riege Software
-- Mary Stradling, DHL
-- Matthias Hurst, Colog AG
-- Pramod Rao, Nexshore Technologies
 - [Ying Lu](https://github.com/luyinglu), Lufthansa Industry Solutions
 
 _(sorted alphabetically)_
