@@ -187,7 +187,6 @@ sequenceDiagram
     participant Customs
     participant Consignee
 
-	 rect rgb(191, 223, 255)
 	 eCommerce Shipper->> Forwarder: provide physical freight (pieces)
 	 Forwarder->> Forwarder: Build boxes out of parcels, build up BUPs
 	 Forwarder->> Cargo Handling Agent: provide physical freight (BUPs)
@@ -204,6 +203,23 @@ sequenceDiagram
     end
 	 
 ```
+
+```mermaid
+flowchart TD
+    A[eCommerce Shipper provides parcels] --> B[Forwarder builds boxes and BUPs]
+    B --> C[Forwarder delivers BUPs to Cargo Handling Agent]
+    C --> D[Goods Acceptance by Cargo Handling Agent]
+    D --> E[Cargo Handling Agent loads aircraft]
+    E --> F[Carrier performs air segment (DEP, ARR)]
+    F --> G[Carrier unloads and scans boxes ("Zollgestellung")]
+    G --> H{Zollbeschau required?}
+    H -- Yes --> I[Carrier separates boxes, transports to Customs]
+    H --> J[Carrier checks customs status]
+    J --> K{Import customs cleared?}
+    K -- Yes --> L[Carrier hands over to Consignee]
+    K -- No --> M[Wait for customs clearance]
+```
+
 
 
 ### Shipper
