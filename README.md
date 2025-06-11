@@ -67,6 +67,13 @@ api-endpoints:
 
 This repository contains the good practice to implement data exchange in the context of eCommerce air cargo based on the ONE Record standard.
 
+## DELME: Open Issues
+
+- RFID must be separated into a good practice
+- PUB/SUB to be added
+- DESIGN ADDITIONAL DATA FIELDS
+
+
 ## Abstract
 
 ECommerce is a constantly growing commodity with unprecidented challengedes to both, the physical handling and the data management to ensure compliance, safety and efficiency. But the logistics and cargo industry grapples with a prevalent and pressing issue: there is no standard to share eCommerce data sharing throughout the supply chain. The consequence of this lack of standardization is evident: stakeholders are burdened with the expensive and time-consuming task of individualized integrations, harmonization of incompatible data formats from different sources, leading to compliance issues, inefficiencies, misunderstandings, and subsequent maintenance costs. The ONE record standard remedies this situation. This good practice document describes a sequence of required steps to share eCommerce data via ONE Record. 
@@ -463,9 +470,9 @@ Remarks:
 - The data field ofProduct contains the link to the product, inPiece the link to the physical piece the item is included in.
 - As the WeightUnit is either KGM, LBR, or ONZ in ONE Record, we have to convert the weight into KGM.
 
-**Pieces**
+**Pieces** 
 
-The highest Level of physical consolidation are the parcels, that contain one or more items. In the ONE Record data model, they are pieces. 
+An additional level of physical consolidation are the parcels, that contain one or more items. They are boxes containing more than one In the ONE Record data model, they are pieces. 
 
 | **ONE Record Logistics Object** | **Field**               | **Value**                          |
 |----------------------------------|-------------------------|------------------------------------|
@@ -474,41 +481,149 @@ The highest Level of physical consolidation are the parcels, that contain one or
 
 ```json
 {
+   "@context":{
+      "@vocab":"https://onerecord.iata.org/ns/cargo#"
+   },
+   "@type":"piece",
+   "@id":"https://1r.example.com/logistics-objects/piece-XXXXXXXX",
+   "specialHandlingCodes":[
+      {
+         "@id":"https://onerecord.iata.org/ns/code-lists/SpecialHandlingCode#BUP"
+      },
+      {
+         "@id":"https://onerecord.iata.org/ns/code-lists/SpecialHandlingCode#CSL"
+      },
+      {
+         "@id":"https://onerecord.iata.org/ns/code-lists/SpecialHandlingCode#EAW"
+      },
+      {
+         "@id":"https://onerecord.iata.org/ns/code-lists/SpecialHandlingCode#ECC"
+      },
+      {
+         "@id":"https://onerecord.iata.org/ns/code-lists/SpecialHandlingCode#GEN"
+      },
+      {
+         "@id":"https://onerecord.iata.org/ns/code-lists/SpecialHandlingCode#SLY"
+      }
+   ],
+   "containedItems":[
+      {
+         "@id":"http://{shipperDomain}/logistics-objects/item-XXXXXXXX"
+      }
+   ],
+   "otherIdentifiers":[
+      {
+         "otherIdentifierType":"parcel ID",
+         "textualValue":"XXXXXXX"
+      }
+   ]
+}}
+```
+
+To make data easier to understand, the prefix does not only contain the ONE Record Logistics objects type, but also the a component identifying the function of the pieces ("parcel").
+
+At this point of time, a backlink in the item to the piece ("inPiece"-Data field) must also be set via a patch request.  
+
+
+### Forwarder´s process and data
+
+
+**Pieces**
+
+The forwarder puts the parcels into boxes. In a ONE Record environment, boxes are pieces including the parcels, that are also represented as pieces.
+
+
+```json
+{
     "@context": {
         "@vocab": "https://onerecord.iata.org/ns/cargo#"
     },
     "@type": "piece",
-    "@id": "https://1r.example.com/logistics-objects/piece-HWMMEVJMXX3Y",
-    "specialHandlingCode": {
-    	"@type": "CodeListElement",
-    	"code": "BUP",
-  	  	"code": "CSL",
-    	"code": "EAW",
-    	"code": "ECC",
-    	"code": "GEN",
-    	"code": "SLY",
-    	"codeListReference": "https://onerecord.iata.org/ns/coreCodeLists/index-en.html#SpecialHandlingCode",
-  	},
-    "containedItems": [
+    "@id": "https://1r.example.com/logistics-objects/piece-box-MXJJFNWN44",
+    "containedPieces": [
     {
-		 "@id": "http://{shipperDomain}/logistics-objects/item-effd84fa-60e5-4729-8b25-816423f9a715-0"
-    },
-    "otherIdentifiers": [
-    {
-      "otherIdentifierType": "parcel ID",
-      "textualValue": "HWMMEVJMXX3Y"
+		 "@id": "http://{shipperDomain}/logistics-objects/piece-parcel-HWMMEVJMXX3Y",
+		 "@id": "http://{shipperDomain}/logistics-objects/piece-parcel-HWMMEVJMXdd3"
     }
   ]
 }
 ```
 
+The backlink in the pieces must also be set in the "inPiece"-data field.
 
-### Forwarder´s process and data
 
-The Forwarder create pieces on two levels
+**Shipment**
 
-1 MAWB per ULD
+As a next steps of the forwarder´s part in the process is to negotiate the AWB with the carrier and attribute the pieces to this contract as well as handing over the physical side of the shipment to the carrier. As an specific agreement for our setting, one Master AWB equals one ULD, and HAWB data structure are not used here. This is a workaround for a lack of transparency on the attribution of pieces to ULDs. ONE Record could solve this problem in a better way by reflecting the physical world with correct linking of pieces to the ULD, but as we are trying to implement the current data exchange in ONE Record, we´ll follow the given frame conditions.
 
+The Shipment - as the physical side of the pieces under one contract - typically looks like this:
+
+
+```json
+{
+    "@id": "http://{{forwarderDomain}}/logistics-objects/shipment-020-2222222",
+    "@type": "https://onerecord.iata.org/ns/cargo#Shipment",
+    "https://onerecord.iata.org/ns/cargo#totalGrossWeight":[  
+        {
+            "https://onerecord.iata.org/ns/cargo#numericValue":"19",
+            "https://onerecord.iata.org/ns/cargo#unit":"kg"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#Pieces":
+    [  
+        {    
+        	"@id": "https://1r.example.com/logistics-objects/piece-box-MXJJFNWN44",
+        	"@id": "https://1r.example.com/logistics-objects/piece-box-MXJJFNWN45"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#Waybill":
+    [  
+        {
+            "@id": "http://{{forwarderDomain}}/logistics-objects/waybill-020-2222222"
+        }
+    ]
+}
+```
+
+It is also neccessary to set a backlink in the pieces, in the "ofShipment"-data field.
+
+
+**Waybill**
+
+
+```json
+{
+    "@id": "http://{{forwarderDomain}}/logistics-objects/waybill-020-2222222",
+    "@type": "https://onerecord.iata.org/ns/cargo#Waybill",
+    "https://onerecord.iata.org/ns/cargo#numericValue":"19",
+    "https://onerecord.iata.org/ns/cargo#waybillType":"MASTER",
+    "https://onerecord.iata.org/ns/cargo#waybillPrefix":"020",
+    "https://onerecord.iata.org/ns/cargo#waybillNumber":"2222222",
+    "https://onerecord.iata.org/ns/cargo#Shipment":
+    [  
+        {
+            "@id": "http://{{forwarderDomain}}/logistics-objects/shipment-020-2222222"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#arrivalLocation":
+    [  
+        {
+            "@id": "http://{{carrierDomain}}/logistics-objects/CTO"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#departureLocation":
+    [  
+        {
+            "@id": "http://{{carrierDomain}}/logistics-objects/FRA"
+        }
+    ]
+}
+```
+
+The backward link in the shipment must be set in the "waybill"-data field.
+
+
+**TransportMovement**
 
 
 ## Special Cases:
@@ -560,7 +675,19 @@ _(sorted alphabetically)_
 > Every good practice is the result of the work of the community, and therefore the contribution of each individual should be recognized and appreciated. 
 > Below is a list of all the people who have actively contributed to this good practice.
 
+- Ajay Manoharan, Qatar Airways
 - Arnaud Lambert, IATA
+- Bilel Chakroun, Air France-KLM
+- [Hendrik Gruber](https://github.com/HendrikLH), Lufthansa Industry Solutions
+- Josh Priebe, Air Canada
+- Keith Lam, GLS HKG 
+- Mark Belliss, British Telecom 
+- Martin Fowler, MDF Solutions
+- [Martin Skopp](https://github.com/mskopp), Riege Software
+- Mary Stradling, DHL
+- Matthias Hurst, Colog AG
+- Pramod Rao, Nexshore Technologies
+- [Ying Lu](https://github.com/luyinglu), Lufthansa Industry Solutions
 
 _(sorted alphabetically)_
 
