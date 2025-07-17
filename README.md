@@ -69,10 +69,13 @@ This repository contains the good practice to implement data exchange in the con
 
 ## DELME: Open Issues
 
-- RFID must be separated into a good practice
-- PUB/SUB to be added
+- RFID must be separated into a separate good practice
+- PUB/SUB examples
+- Replace placeholders for servers
 - DESIGN ADDITIONAL DATA FIELDS
-
+- Add PUB/SUB in Sequence Diagram
+	- Data owner triggered SUB by Shipper and FF
+- ChatGPT to optimize
 
 ## Abstract
 
@@ -180,8 +183,9 @@ This can be useful (1) when piece-level granularity is not required, (2) when no
 
 ## Business Process and Data Sharing
 
-### Process overview
+### Business Process overview
 
+Remark: For the business interaction, all ONE Record data sharing is displayed as a separte swimlane. This is not to be interpreted as a single server or storage. It includes all de-central ONE Record servers by the different stakeholders. 
 
 ```mermaid
 sequenceDiagram
@@ -590,6 +594,7 @@ It is also neccessary to set a backlink in the pieces, in the "ofShipment"-data 
 
 **Waybill**
 
+The Waybill - as the contract - links the Shipment with the AWB-Number and Origin / Destination of the contract: 
 
 ```json
 {
@@ -608,7 +613,7 @@ It is also neccessary to set a backlink in the pieces, in the "ofShipment"-data 
     "https://onerecord.iata.org/ns/cargo#arrivalLocation":
     [  
         {
-            "@id": "http://{{carrierDomain}}/logistics-objects/CTO"
+            "@id": "http://{{carrierDomain}}/logistics-objects/HKG"
         }
     ],
     "https://onerecord.iata.org/ns/cargo#departureLocation":
@@ -622,8 +627,151 @@ It is also neccessary to set a backlink in the pieces, in the "ofShipment"-data 
 
 The backward link in the shipment must be set in the "waybill"-data field.
 
+The WaybillLO-data can also be provided by the Carrier, but here we follow the established process.
+
+### Carrier´s process and data
 
 **TransportMovement**
+
+The transportMovement reflects the transportation on the air segment. It is provided by the carrier.
+
+```json
+{
+    "@id": "http://{{carrierDomain}}/logistics-objects/LH797-26-01-09",
+    "@type": "https://onerecord.iata.org/ns/cargo#TransportMovement",
+    "https://onerecord.iata.org/ns/cargo#distanceMeasured":[  
+        {
+            "https://onerecord.iata.org/ns/cargo#numericValue":"1533",
+            "https://onerecord.iata.org/ns/cargo#unit":"nm"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#departureLocation":
+    [  
+        {
+            "@id": "http://{{carrierDomain}}/logistics-objects/HKG"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#arrivalLocation":
+    [  
+        {
+            "@id": "http://{{carrierDomain}}/logistics-objects/FRA"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#loadingActions":[  
+        {
+            "@id": "http://{{carrierDomain}}/logistics-objects/Loading-LH797-26-01-09"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#operatingTransportMeans":[  
+        {
+            "@id": "http://{{carrierDomain}}/logistics-objects/D-AIHF"
+        }
+    ]
+}
+```
+
+In our case, the required loadingActivity is also provided by the carrier, as we assume, that the CHA is not using ONE Record yet:
+
+```json
+{
+    "@id": "http://{{ghaDomain}}/logistics-objects/Loading-LH797-26-01-09",
+    "@type": "https://onerecord.iata.org/ns/cargo#Loading",
+    "https://onerecord.iata.org/ns/cargo#loadedUnits":[
+        {
+            "@id": "http://{{ghaDomain}}/logistics-objects/AKE-4711"
+        }
+    ],
+     "https://onerecord.iata.org/ns/cargo#servedActivity":[  
+        {
+            "@id": "http://{{carrierDomain}}/logistics-objects/LH797-26-01-09"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#loadingType": "LOADING"
+}
+```
+
+### Custom´s process and data
+
+| Activity             | 1:1 Implementation                     | Transition                                 | Full Implementation                          |
+|----------------------|----------------------------------------|--------------------------------------------|----------------------------------------------|
+|                      |                                        |                                            |                                              |
+|                      |                                        |                                            |                                              |
+|                      |                                        |                                            |                                              |
+|                      |                                        |                                            |                                              |
+|                      |                                        |                                            |                                              |
+
+?PUB/SUB
+
+Trigger for customs: 
+
+- Booking on AWB to FRA? 
+	- pro: earlier access
+	- con: no definite routing yet
+- Or Transport Movement
+	- pro: definite flight
+	- con: later
+
+**CheckLO for PLACI**
+
+PreArrival CheckLO
+
+OPEN: USE OF MILESTONES
+
+Level?
+
+- on Shipment Level
+	- as-is like today
+	- but less granular and "wrong" entity
+- or Piece only?
+	- Shipper: PieceLO
+	- C´nee: PieceLO
+	- Weight: PieceLO
+	- Number of Pieces: *irrelevant, as single piece reporting*
+	- Goods Description / HS Code: ProductLO
+	- AWB Number: WaybillLO (BUT CAN BE LINKED TO MAWB AND HAWB)
+	- Transport Document Type: *ONE Record Data Set?*
+	- UCR: *likely not reqd*
+- or separated objects?
+		
+
+```json
+{
+    "@id": "http://{{customsDomain}}/logistics-objects/PLACI-2399393-check",
+    "@type": "https://onerecord.iata.org/ns/cargo#Check",
+    "https://onerecord.iata.org/ns/cargo#checkedObjects":[
+        {
+            "@id": "https://1r.example.com/logistics-objects/piece-XXXXXXXX"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#checkTotalResult":[
+        {
+            "@id": "https://1r.example.com/logistics-objects/PLACI-2399393-result"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#checker": "1r.zoll.de",
+    "https://onerecord.iata.org/ns/cargo#actionEndTime": "xxxxxx"
+}
+```
+
+```json
+{
+    "@id": "http://{{customsDomain}}/logistics-objects/PLACI-2399393-result",
+    "@type": "https://onerecord.iata.org/ns/cargo#CheckTotalResult",
+    "https://onerecord.iata.org/ns/cargo#resultOfCheck":[
+        {
+            "@id": "http://{{customsDomain}}/logistics-objects/PLACI-2399393-check"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#passed": "yes",
+    "https://onerecord.iata.org/ns/cargo#checkRemark": "ACCEPTED / CLEAR"
+}
+```
+
+Important: the "passed"-data field must only be "yes" if the result code "ACCEPTED / CLEAR", in all other cases, it must be "no".
+
+**CheckLO for Customs inspection**
+
+
 
 
 ## Special Cases:
@@ -641,8 +789,7 @@ see [digita-cargo/glossary](https://github.com/IATA-Cargo/ONE-Record/blob/fc8527
   
 ## Acknowledgements
 
-The initial version of this document is the outcome of the  "Joint ONE Record piloting and transition working group // technical part" at IATA. 
-It was orchestrated by Arnaud Lambert of IATA as secretary and [Philipp Billion](https://github.com/DrPhilippBillion) of Lufthansa Cargo as chairman.
+tbd. [Philipp Billion](https://github.com/DrPhilippBillion) of Lufthansa Cargo as chairman.
 
 Special thanks to [Niclas Scheiber](https://github.com/NiclasScheiber), Frankfurt University of Applied Sciences for preparing version 3.0.0 of the 
 ONE Record core ontology in coordination with the IATA ONE Record data model focus group.
@@ -665,7 +812,7 @@ Issues related to this good practice are tracked on GitHub
 > Every maintainer MUST have commit access to the good practice repository.
 
 - [Daniel A. Döppner](https://github.com/ddoeppner), Lufthansa Cargo 
-- [Ingo Zeschky](https://github.com/ChrisKranich), Lufthansa Cargo
+- Christopher Enriquez Urban, Fraunhofer IML
 - [Philipp Billion](https://github.com/DrPhilippBillion), Lufthansa Cargo
 
 _(sorted alphabetically)_
@@ -675,21 +822,7 @@ _(sorted alphabetically)_
 > Every good practice is the result of the work of the community, and therefore the contribution of each individual should be recognized and appreciated. 
 > Below is a list of all the people who have actively contributed to this good practice.
 
-- Ajay Manoharan, Qatar Airways
 - Arnaud Lambert, IATA
-- Bilel Chakroun, Air France-KLM
-- [Hendrik Gruber](https://github.com/HendrikLH), Lufthansa Industry Solutions
-- Josh Priebe, Air Canada
-- Keith Lam, GLS HKG 
-- Mark Belliss, British Telecom 
-- Martin Fowler, MDF Solutions
-- [Martin Skopp](https://github.com/mskopp), Riege Software
-- Mary Stradling, DHL
-- Matthias Hurst, Colog AG
-- Pramod Rao, Nexshore Technologies
 - [Ying Lu](https://github.com/luyinglu), Lufthansa Industry Solutions
 
 _(sorted alphabetically)_
-
-
-
