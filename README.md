@@ -61,7 +61,7 @@ api-endpoints:
 
 # Good Practice: eCommerce
 [![Made with love for Digital Cargo](https://img.shields.io/badge/Made%20with%20%E2%9D%A4%20for-Digital%20Cargo-dce435)](https://digital-cargo.org)
-[![Made with support of the German Federal Ministry for Digital Transformation and Government Modernisation](https://img.shields.io/badge/Made%20with%20support%20of%20the-%20German%20Ministery%20for%20Digital%20and%20Transport-dce435)]([https://digital-cargo.org](https://bmds.bund.de))
+![Made with support of the German Federal Ministry for Digital Transformation and Government Modernisation](https://img.shields.io/badge/Made%20with%20support%20of%20the-%20German%20Federal%20Ministry%20for%20Digital%20Transformation%20and%20Government%20Modernisation-dce435)
 [![GitHub](https://img.shields.io/github/license/digital-cargo/good-practice-shipment-tracking)](https://creativecommons.org/licenses/by/4.0/)
 [![Releases](https://img.shields.io/github/v/release/digital-cargo/good-practice-eCommerce)](https://github.com/digital-cargo/good-practice-eCommerce/releases)
 
