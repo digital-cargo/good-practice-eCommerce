@@ -187,6 +187,7 @@ This can be useful (1) when piece-level granularity is not required, (2) when no
 
 Remark: For the business interaction, all ONE Record data sharing is displayed as a separte swimlane. This is not to be interpreted as a single server or storage. It includes all de-central ONE Record servers by the different stakeholders. 
 
+
 ```mermaid
 sequenceDiagram
 	
