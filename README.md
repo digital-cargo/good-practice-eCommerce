@@ -67,7 +67,7 @@ api-endpoints:
 
 This repository contains the good practice to implement data exchange in the context of eCommerce air cargo based on the ONE Record standard.
 
-## DELME: Open Issues
+## DELME: STATUS / Open Issues
 
 - RFID must be separated into a separate good practice
 - PUB/SUB examples
@@ -76,6 +76,20 @@ This repository contains the good practice to implement data exchange in the con
 - Add PUB/SUB in Sequence Diagram
 	- Data owner triggered SUB by Shipper and FF
 - ChatGPT to optimize
+
+
+## DELME: Status
+
+| **Step**                         | **Implementing party** | **Process Description** | **Sequence Diagram** | **LO Description** | **API Description** | **Postman Collection** | 
+|----------------------------------|------------------------|-------------------------|----------------------|--------------------|---------------------|------------------------|
+| **eCom Shipper: Data provision** | CHI                    | nok                     | nok                  | nok                | nok                 | nok                    |
+| **Customs: PLACI**               | LH Cargo               | nok                     | nok                  | nok                | nok                 | nok                    |
+| **Forwarder: BU**                | Schenker               | nok                     | nok                  | nok                | nok                 | nok                    |
+| **Forwarder: RFID part**         | LH Cargo               | nok                     | nok                  | nok                | nok                 | nok                    |
+| **Carrier: core transport**      | LH Cargo               | nok                     | nok                  | nok                | nok                 | nok                    |
+| **Customs: presentation status** | LH Cargo               | nok                     | nok                  | nok                | nok                 | nok                    |
+| **GHA Import**                   | CHI                    | nok                     | nok                  | nok                | nok                 | nok                    |
+
 
 ## Abstract
 
@@ -690,15 +704,31 @@ In our case, the required loadingActivity is also provided by the carrier, as we
 }
 ```
 
-### Custom´s process and data
+### Custom´s process and data: PLACI Check
 
-| Activity             | 1:1 Implementation                     | Transition                                 | Full Implementation                          |
-|----------------------|----------------------------------------|--------------------------------------------|----------------------------------------------|
-|                      |                                        |                                            |                                              |
-|                      |                                        |                                            |                                              |
-|                      |                                        |                                            |                                              |
-|                      |                                        |                                            |                                              |
-|                      |                                        |                                            |                                              |
+# Pre-Loading Data Elements (7 + 1)
+
+To enable effective air cargo security screening before departure, regulatory authorities such as the European Union (ICS2), the United States (ACAS), and other jurisdictions have introduced Pre-Loading Advance Cargo Information (PLACI) programs. These frameworks require carriers and freight forwarders to electronically submit a small but essential set of data elements about each consignment prior to loading the goods onto the aircraft. The purpose is to allow a pre-departure risk assessment, enabling customs and security agencies to identify potentially high-risk consignments without disrupting the overall cargo flow.
+
+Rather than demanding full documentation at this early stage, PLACI initiatives rely on a minimal dataset—often referred to as the “7 + 1 data elements.” These elements represent the critical information needed to identify the parties involved, describe the goods, and connect the shipment to its specific transport leg. The “7” core elements describe the shipment itself, while the “+1” element provides the link to the transport details, ensuring that the data can be matched to a particular aircraft and flight.
+
+The seven core data elements cover the essential identifiers for a shipment:
+
+- Shipper name and address — identifying the original consignor responsible for sending the goods.
+- Consignee name and address — identifying the intended receiver of the goods.
+- Goods description — a clear, specific, and intelligible description of the cargo contents, avoiding generic terms such as “freight” or “consolidated cargo.”
+- Total number of pieces — the count of individual packages or handling units within the shipment.
+- Gross weight — the overall shipment weight, including packaging.
+- Air Waybill number — the unique shipment identifier that links all documents and transactions.
+- Country of origin and destination — derived from the shipper’s and consignee’s addresses, enabling routing and risk profiling.
+
+The “+1” element completes the dataset by providing transport information, such as the carrier code, flight number, and planned departure date. This allows authorities to perform the screening before loading and to issue status messages like “OK to Load”, “Request for Information”, or “Do Not Load.”
+
+For this simulation, we´ll follow the current legal requirements, although a ONE Record infrastructure will provide 
+
+#### Trigger
+
+The 
 
 ?PUB/SUB
 
@@ -711,18 +741,15 @@ Trigger for customs:
 	- pro: definite flight
 	- con: later
 
-**CheckLO for PLACI**
+**Data pull**
 
-PreArrival CheckLO
+According to the current framework, the 7+1 data elements must be provided for fulfilling pre-loading information requirements. Although ONE Record offers a lot more data at higher quality at an earlier stage, we will focus on providing these essential data fields. The additional potential is briefely described in the chapter "Further potential".
 
-OPEN: USE OF MILESTONES
+One of the assumptions is that customs will work on piece level, as this is the operationally best option.
 
-Level?
+As soon as there´s a notification on available data, the customs party in this environment will pull the following Logistics objects and process the relevant data fields:
 
-- on Shipment Level
-	- as-is like today
-	- but less granular and "wrong" entity
-- or Piece only?
+- Piece only?
 	- Shipper: PieceLO
 	- C´nee: PieceLO
 	- Weight: PieceLO
@@ -731,7 +758,33 @@ Level?
 	- AWB Number: WaybillLO (BUT CAN BE LINKED TO MAWB AND HAWB)
 	- Transport Document Type: *ONE Record Data Set?*
 	- UCR: *likely not reqd*
+
+	
 - or separated objects?
+
+
+| # | Data Field | Description | ONE Record Mapping (LogisticsObject.DataField) | Example | Remark| 
+|---|-------------|----------------|----------------------------------------------------|----------|----------|
+| 1 | Shipper name and address | Full name and address of the original consignor responsible for sending the goods. Used to identify the origin of the shipment for risk assessment. | **piece.involvedParties** => **party.details**(party.partyRole) => **company**(company.name, company.location) | SHP, BrightWave Technologies Inc., 2450 Industrial Park Drive, Bloomington, IL 61704, US ||
+| 2 | Consignee name and address | Full name and address of the intended receiver of the goods. Enables identification and screening of the receiving party. | **piece.involvedParties** => **party.details**(party.partyRole) => **company**(company.name, company.location)| CNE, Shanghai Import Co. Ltd., Pudong Blvd. 55, Shanghai, CN |
+| 3 | Goods description | Clear, specific, and intelligible description of the cargo contents. Generic terms such as “freight” or “cargo” are not acceptable. | **piece.goodsDescription** | Smartphone accessories – chargers and cables |There are two options for the "Goods Description": either use the string field in the PieceLO, or use the linked Item/Product. The first option is pragmatic and easy, the second requires a more sophisticated system, but reveals an easy identification if many objects with identical nature of goods are provided. |
+| 4 | Total number of pieces | Total count of individual packages or handling units in the shipment. | - | 1 | One of the assumptions is that customs will work on piece level, as this is the operationally best option.|
+| 5 | Gross weight | Overall shipment weight including packaging, expressed with unit of measure. | **piece.grossWeight**| 145.0 kg |
+| 6 | Air Waybill number | Unique shipment identifier at master or house level; connects all shipment data and related events. | **piece.ofShipment** => **shipment.waybill**(waybill.waybillPrefix, waybill.waybillNumber)| 020-12345675 ||
+| 7 | Country of origin and destination | Derived from shipper and consignee addresses; used for routing and regulatory screening. | **piece.involvedParties** => **party.details**(party.partyRole) => **company**(company.name, company.location) | US → CN | Origian from *party.partyRole* = "SHP", destination from *party.partyRole* = CNE| 
+| +1 | Transport information | Links the consignment to its actual transport leg, including carrier, flight number, and departure date. | **piece.involvedInActions** => **loading.servedActivity** => **transportMovement**(transportMovement.transportIdentifier,ransportMovement.movementTimestamp | LH8406 // 2025-10-06 | selection of correct leg via *transportMovement.movementTimeType* = "SCHEDULED" and/or *transportMovement.modeCode* = "AIR TRANSPORT" and/or *transportMovement.modeCodeQualifier* = "MAIN CARRIAGE"  
+
+
+
+
+**CheckLO for PLACI**
+
+Pre-Loading Clearance require the 
+
+PreArrival CheckLO
+
+OPEN: USE OF MILESTONES
+
 		
 
 ```json
@@ -772,7 +825,9 @@ Important: the "passed"-data field must only be "yes" if the result code "ACCEPT
 **CheckLO for Customs inspection**
 
 
+## Further potential
 
+- Potential beyond 7+1: with examples
 
 ## Special Cases:
 
@@ -811,7 +866,7 @@ Issues related to this good practice are tracked on GitHub
 > Each good practice MUST have at least one maintainer who is responsible for ongoing development and quality assurance. 
 > Every maintainer MUST have commit access to the good practice repository.
 
-- [Daniel A. Döppner](https://github.com/ddoeppner), Lufthansa Cargo 
+- Oliver Ditz, Fraunhofer IML
 - Christopher Enriquez Urban, Fraunhofer IML
 - [Philipp Billion](https://github.com/DrPhilippBillion), Lufthansa Cargo
 
@@ -822,7 +877,9 @@ _(sorted alphabetically)_
 > Every good practice is the result of the work of the community, and therefore the contribution of each individual should be recognized and appreciated. 
 > Below is a list of all the people who have actively contributed to this good practice.
 
-- Arnaud Lambert, IATA
-- [Ying Lu](https://github.com/luyinglu), Lufthansa Industry Solutions
+- Oliver Ditz, Fraunhofer IML
+- Oliver Meschkov, CHI
+- [Philipp Billion](https://github.com/DrPhilippBillion), Lufthansa Cargo
+- Christopher Enriquez Urban, Fraunhofer IML
 
 _(sorted alphabetically)_
