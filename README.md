@@ -83,7 +83,7 @@ This repository contains the good practice to implement data exchange in the con
 | **Step**                         | **Implementing party** | **Process Description** | **Sequence Diagram** | **LO Description** | **API Description** | **Postman Collection** | 
 |----------------------------------|------------------------|-------------------------|----------------------|--------------------|---------------------|------------------------|
 | **eCom Shipper: Data provision** | CHI                    | nok                     | nok                  | nok                | nok                 | nok                    |
-| **Customs: PLACI**               | LH Cargo               | nok                     | nok                  | nok                | nok                 | nok                    |
+| **Customs: PLACI**               | LH Cargo               | 50%                     | nok                  | 50%                | nok                 | nok                    |
 | **Forwarder: BU**                | Schenker               | nok                     | nok                  | nok                | nok                 | nok                    |
 | **Forwarder: RFID part**         | LH Cargo               | nok                     | nok                  | nok                | nok                 | nok                    |
 | **Carrier: core transport**      | LH Cargo               | nok                     | nok                  | nok                | nok                 | nok                    |
