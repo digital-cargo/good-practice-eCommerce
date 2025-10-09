@@ -772,7 +772,7 @@ As soon as there´s a notification on available data, the customs party in this 
 | 5 | Gross weight | Overall shipment weight including packaging, expressed with unit of measure. | **piece.grossWeight**| 145.0 kg |
 | 6 | Air Waybill number | Unique shipment identifier at master or house level; connects all shipment data and related events. | **piece.ofShipment** => **shipment.waybill** (waybill.waybillPrefix, waybill.waybillNumber)| 020-12345675 ||
 | 7 | Country of origin and destination | Derived from shipper and consignee addresses; used for routing and regulatory screening. | **piece.involvedParties** => **party.details** (party.partyRole) => **company** (company.name, company.location) | US → CN | Origian from *party.partyRole* = "SHP", destination from *party.partyRole* = CNE| 
-| +1 | Transport information | Links the consignment to its actual transport leg, including carrier, flight number, and departure date. | **piece.involvedInActions** => **loading.servedActivity** => **transportMovement**( transportMovement.transportIdentifier, ransportMovement.movementTimestamp | LH8406 // 2025-10-06 | selection of correct leg via *transportMovement.movementTimeType* = "SCHEDULED" and/or *transportMovement.modeCode* = "AIR TRANSPORT" and/or *transportMovement.modeCodeQualifier* = "MAIN CARRIAGE"  
+| +1 | Transport information | Links the consignment to its actual transport leg, including carrier, flight number, and departure date. | **piece.involvedInActions** => **loading.servedActivity** => **transportMovement**( transportMovement.transportIdentifier, ransportMovement.movementTimestamp | LH8406 // 2025-10-06 | selection of correct leg via Origin: outside EU / DEST: inside  
 
 
 
