@@ -80,7 +80,7 @@ This repository contains the good practice to implement data exchange in the con
 
 ## DELME: Status
 
-| **Step**                         | **Implementing party** | **AP1.2: Process Description** | **AP1.2: Sequence Diagram** | **AP1.2: LO Description** | **AP1.2: API Feature application** | **AP1.3: Postman Collection** | 
+| **Step**                         | **Implementing party** | **AP1.2: Process Description** | **AP1.2: Sequence Diagram** | **AP1.2: LO Description** | **AP1.2: API Feature application** | **AP1.3: Postman Collection, Test-Execution, etc** | 
 |----------------------------------|------------------------|-------------------------|----------------------|--------------------|---------------------|------------------------|
 | **eCom Shipper: Data provision** | CHI                    | nok                     | nok                  | nok                | nok                 | nok                    |
 | **Customs: PLACI**               | LH Cargo               | 50%                     | nok                  | 50%                | nok                 | nok                    |
