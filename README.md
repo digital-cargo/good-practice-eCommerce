@@ -76,6 +76,7 @@ This repository contains the good practice to implement data exchange in the con
 - Add PUB/SUB in Sequence Diagram
 	- Data owner triggered SUB by Shipper and FF
 - ChatGPT to optimize
+- RFID: potential for other application when 1R URI written into Tag 
 
 
 ## DELME: Status
