@@ -202,7 +202,6 @@ This can be useful (1) when piece-level granularity is not required, (2) when no
 
 Remark: For the business interaction, all ONE Record data sharing is displayed as a separte swimlane. This is not to be interpreted as a single server or storage. It includes all de-central ONE Record servers by the different stakeholders. 
 
-
 ```mermaid
 sequenceDiagram
 	
@@ -647,6 +646,24 @@ The WaybillLO-data can also be provided by the Carrier, but here we follow the e
 
 ### Carrier´s process and data
 
+The existence of Aircraft (=transportMeans), ULD (=loadingUnit) is assumed.
+
+In our case, the carrier fulfills the tasks of the CHA at origin.
+
+First part of the business process is to perform the RCS check. To fulfill this purpose, the shipment record must be available, the physical freight must be delivered and the pre-loading status must be evaluated. 
+
+The Shipment Record should already be evaluated ahead of the physical delivery of the freight, so that at the time of delivery, only the crosscheck between physical freight and digital twin is required. Also, the pre-loading status information should have been monitored. 
+
+Althought RCS documents a compliant status at a point in time, the Shipment Record and the pre-loading status must be monitored continously. Any change must be taken into account and evaluated for it´s impact on the business process, even after RCS.
+
+**PieceLO, ItemLO, WaybillLO, ShipmentLO, ULDLO, CheckLO** Pull all relevant data for latest status
+
+ GET {{baseURL}}/logistics-objects/{{logisticsObjectId}}
+
+**LogisticsEvent** Patching the RCS event into the pieces
+
+tbd.
+
 **TransportMovement**
 
 The transportMovement reflects the transportation on the air segment. It is provided by the carrier.
@@ -655,12 +672,6 @@ The transportMovement reflects the transportation on the air segment. It is prov
 {
     "@id": "http://{{carrierDomain}}/logistics-objects/LH797-26-01-09",
     "@type": "https://onerecord.iata.org/ns/cargo#TransportMovement",
-    "https://onerecord.iata.org/ns/cargo#distanceMeasured":[  
-        {
-            "https://onerecord.iata.org/ns/cargo#numericValue":"1533",
-            "https://onerecord.iata.org/ns/cargo#unit":"nm"
-        }
-    ],
     "https://onerecord.iata.org/ns/cargo#departureLocation":
     [  
         {
@@ -686,7 +697,10 @@ The transportMovement reflects the transportation on the air segment. It is prov
 }
 ```
 
-In our case, the required loadingActivity is also provided by the carrier, as we assume, that the CHA is not using ONE Record yet:
+
+**LoadingActivity** for loading the ULD (BUP) onto the aircraft
+
+In our case, the required loadingActivities are provided by the carrier, as we assume, that the CHA is not using ONE Record yet:
 
 ```json
 {
@@ -705,6 +719,8 @@ In our case, the required loadingActivity is also provided by the carrier, as we
     "https://onerecord.iata.org/ns/cargo#loadingType": "LOADING"
 }
 ```
+
+
 
 ### Custom´s process and data: PLACI Check
 
