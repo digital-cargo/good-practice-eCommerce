@@ -1,5 +1,5 @@
 
----
+```mermaid
 sequenceDiagram
     %% Teilnehmer
     participant eCommerce Shipper
@@ -59,3 +59,4 @@ sequenceDiagram
             ONE Record Server (CHI)-->>ONE Record Server (Customs): Synchronisiere Zollstatus
         end
     end
+```
