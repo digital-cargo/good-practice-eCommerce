@@ -202,7 +202,7 @@ This can be useful (1) when piece-level granularity is not required, (2) when no
 
 Remark: For the business interaction, all ONE Record data sharing is displayed as a separte swimlane. This is not to be interpreted as a single server or storage. It includes all de-central ONE Record servers by the different stakeholders. 
 
-
+```mermaid
 sequenceDiagram
     %% Jede Lifeline repraesentiert den Stakeholder inkl. seines ONE Record Endpoints
     participant Shipper as "eCommerce Shipper"
@@ -262,6 +262,7 @@ sequenceDiagram
     else Import ok
         Carrier->>Consignee: Deliver shipment - Business
     end
+```
 
 #### Remarks
 * The role "Carrier" includes the import Cargo Handling Agent role at the carrier hub, which is - in this case - also the import station 
