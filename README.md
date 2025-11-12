@@ -202,50 +202,66 @@ This can be useful (1) when piece-level granularity is not required, (2) when no
 
 Remark: For the business interaction, all ONE Record data sharing is displayed as a separte swimlane. This is not to be interpreted as a single server or storage. It includes all de-central ONE Record servers by the different stakeholders. 
 
-
 ```mermaid
 sequenceDiagram
-	
-    participant eCommerce Shipper
+    %% Jede Lifeline repraesentiert den Stakeholder inkl. seines ONE Record Endpoints
+    participant Shipper as "eCommerce Shipper"
     participant Forwarder
-    participant Cargo Handling Agent 
-    participant ONE Record Data Layer
-    participant Carrier 
+    participant GHA as "Cargo Handling Agent"
+    participant Carrier
     participant Customs
     participant Consignee
+    participant CHI as "CHI Import Team"
 
-	 eCommerce Shipper->> Forwarder: provide physical freight (pieces)
-	 Note over ONE Record Data Layer: (virtual data layer as actor) 
-	 eCommerce Shipper-->> ONE Record Data Layer: Shares products, items, pieces (=parcels)
-	 ONE Record Data Layer-->>	Forwarder: Gets notified on products, items, pieces 
-	 Forwarder->> Forwarder: Build boxes out of parcels (= pieces in pieces) and creates MAWB and ULD
-	 Forwarder-->> ONE Record Data Layer: Shares MAWB and pieces 
-	 ONE Record Data Layer-->>	Cargo Handling Agent: Gets notified on products, items, pieces and MAWB
-	 ONE Record Data Layer-->>	Carrier: Gets notified on products, items, pieces, AWB, ULD
-	 ONE Record Data Layer-->>	Customs: Gets notified on products, items, pieces to be imported
-	 Customs-->>ONE Record Data Layer: Provides PLACI status on piece-level
-	 ONE Record Data Layer-->>	Cargo Handling Agent: Gets notified on PLACI-Status
-	 Forwarder->> Cargo Handling Agent: provide physical freight (BUPs)
-	 Cargo Handling Agent->> Cargo Handling Agent: Perform Goods Acceptance
-	 Cargo Handling Agent-->>ONE Record Data Layer: Provide status update RCS
-	 Cargo Handling Agent->>Carrier: Load A/C
-	 Carrier->>Carrier: Perform air segment (DEP, ARR), unload A/C
-#	 Carrier-->>ONE Record Data Layer: Provide status update DEP, ARR
-	 Carrier->>Carrier: automated scan of boxes (customs presentation)
-	 Carrier-->>ONE Record Data Layer: Provide customs presentation status update
-	 ONE Record Data Layer-->>Customs: Gets notified on customs presentation status update
-	 Customs-->>ONE Record Data Layer: Provides customs presentation required status 
-	 alt customs presentation required
-		Carrier->>Customs: Separate Boxes, transport to customs, perform presentation
-		Customs-->>ONE Record Data Layer: share updated customs presentation required status
-	 	end
-    Carrier->>Carrier: Check for Import customs Status
-    Customs-->>ONE Record Data Layer: Provide Import customs Status
-    Carrier->>Consignee: customs status ok: Handover to C´nee
-    alt Import customs status nok
-	   Carrier->>Carrier: Wait for ok
+    %% 0) Access & Subscription
+    Shipper->>Forwarder: GRANT Access Delegation (CREATE Authorization)
+    Forwarder->>Shipper: Register Subscription (PUB/SUB setup)
+
+    %% 1) Ursprung & Datenerstellung
+    Shipper->>Forwarder: CREATE Logistics Objects (Pieces, Products)
+    Note right of Forwarder: PUB/SUB: Forwarder erhaelt neue Sendungsdaten
+    Shipper->>Forwarder: Provide physical freight (Pieces) - Business
+
+    %% 2) Konsolidierung & Transportdokumente
+    Note right of Forwarder: Internal process: Consolidate boxes, create Waybill (MAWB/HAWB) and ULD
+    Forwarder->>GHA: CREATE or PATCH Logistics Objects (Waybill, ULD)
+    Note right of GHA: PUB/SUB: Notification Pieces plus Waybill available
+    Forwarder->>Carrier: CREATE or PATCH Logistics Objects (Waybill, ULD)
+    Forwarder->>Customs: CREATE CustomsDeclaration (Pre-Alert / PLACI)
+
+    %% 3) PLACI / Vorpruefung
+    Customs->>Forwarder: PATCH Logistics Objects (Piece) - PLACI status update
+    Customs->>GHA: PATCH Logistics Objects (Piece) - PLACI status update
+
+    %% 4) Warenannahme & RCS
+    Forwarder->>GHA: Deliver BUPs - Business
+    Note right of GHA: Internal process: Perform goods acceptance (RCS)
+    GHA->>Carrier: CREATE Logistics Event (HandlingEvent RCS)
+
+    %% 5) Flugsegment & Meilensteine
+    Note right of Carrier: Internal process: Perform flight (DEP, ARR) and unload
+    Carrier->>Forwarder: PATCH Logistics Objects (TransportSegment) - DEP/ARR
+    Carrier->>Customs: CREATE Logistics Event (Presentation initiated)
+
+    %% 6) Zollvorlage & Praesentation
+    Customs->>Carrier: PATCH Logistics Objects (Shipment) - Presentation required
+    alt Presentation required
+        Carrier->>Customs: Present boxes - Business
+        Customs->>Carrier: PATCH Logistics Objects (Shipment) - Presentation completed
     end
-	 
+
+    %% 7) Import-Clearance
+    Carrier->>Customs: Request import customs status - Business
+    Customs->>Carrier: PATCH Logistics Objects (Shipment) - ImportCustomsStatus updated
+
+    alt Import not ok
+        loop Clearance pending
+            CHI->>Customs: PATCH Logistics Objects (CustomsDeclaration) - SupportingDocuments updated
+            Customs->>Carrier: PATCH Logistics Objects (Shipment) - ImportCustomsStatus updated
+        end
+    else Import ok
+        Carrier->>Consignee: Deliver shipment - Business
+    end
 ```
 
 #### Remarks
