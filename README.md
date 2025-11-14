@@ -241,7 +241,7 @@ sequenceDiagram
     Shipper-->>Forwarder: Provide physical freight (Pieces)
     activate Forwarder
     Forwarder-->>Forwarder: Build up ULDs
-    Forwarder->>CHA Export: Provide physical freight (ULDs)
+    Forwarder-->>CHA Export: Provide physical freight (ULDs)
     deactivate Forwarder
     activate CHA Export
     CHA Export-->>CHA Export: Perform physical acceptance check
