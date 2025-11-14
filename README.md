@@ -1,4 +1,4 @@
-≤<!--
+<!--
 ---
 title: good-practice-eCommerce
 repository: https://github.com/digital-cargo/good-practice-eCommerce
@@ -84,10 +84,10 @@ This repository contains the good practice to implement data exchange in the con
 | **Step**                         | **Implementing party** | **AP1.2: Process Description** | **AP1.2: Sequence Diagram** | **AP1.2: LO Description** | **AP1.2: API Feature application** | **AP1.3: Postman Collection, Test-Execution, etc** | 
 |----------------------------------|------------------------|-------------------------|----------------------|--------------------|---------------------|------------------------|
 | **eCom Shipper: Data provision** | CHI                    | nok                     | nok                  | nok                | nok                 | nok                    |
-| **Customs: PLACI**               | LH Cargo               | 50%                     | nok                  | 50%                | nok                 | nok                    |
+| **Customs: PLACI**               | LH Cargo               | 50%                     | 70%                  | 50%                | 10%                 | 25%                    |
 | **Forwarder: BU**                | Schenker               | nok                     | nok                  | nok                | nok                 | nok                    |
 | **Forwarder: RFID part**         | LH Cargo               | nok                     | nok                  | nok                | nok                 | nok                    |
-| **Carrier: core transport**      | LH Cargo               | nok                     | nok                  | nok                | nok                 | nok                    |
+| **Carrier: core transport**      | LH Cargo               | 50%                     | 50%                  | 30%                | 35%                 | 40%                    |
 | **Customs: presentation status** | LH Cargo               | nok                     | nok                  | nok                | nok                 | nok                    |
 | **GHA Import**                   | CHI                    | nok                     | nok                  | nok                | nok                 | nok                    |
 
