@@ -694,6 +694,24 @@ The WaybillLO-data can also be provided by the Carrier, but here we follow the e
 
 ### Carrier´s process and data
 
+The existence of Aircraft (=transportMeans), ULD (=loadingUnit) is assumed.
+
+In our case, the carrier fulfills the tasks of the CHA at origin.
+
+First part of the business process is to perform the RCS check. To fulfill this purpose, the shipment record must be available, the physical freight must be delivered and the pre-loading status must be evaluated. 
+
+The Shipment Record should already be evaluated ahead of the physical delivery of the freight, so that at the time of delivery, only the crosscheck between physical freight and digital twin is required. Also, the pre-loading status information should have been monitored. 
+
+Althought RCS documents a compliant status at a point in time, the Shipment Record and the pre-loading status must be monitored continously. Any change must be taken into account and evaluated for it´s impact on the business process, even after RCS.
+
+**PieceLO, ItemLO, WaybillLO, ShipmentLO, ULDLO, CheckLO** Pull all relevant data for latest status
+
+ GET {{baseURL}}/logistics-objects/{{logisticsObjectId}}
+
+**LogisticsEvent** Patching the RCS event into the pieces
+
+tbd.
+
 **TransportMovement**
 
 The transportMovement reflects the transportation on the air segment. It is provided by the carrier.
@@ -702,12 +720,6 @@ The transportMovement reflects the transportation on the air segment. It is prov
 {
     "@id": "http://{{carrierDomain}}/logistics-objects/LH797-26-01-09",
     "@type": "https://onerecord.iata.org/ns/cargo#TransportMovement",
-    "https://onerecord.iata.org/ns/cargo#distanceMeasured":[  
-        {
-            "https://onerecord.iata.org/ns/cargo#numericValue":"1533",
-            "https://onerecord.iata.org/ns/cargo#unit":"nm"
-        }
-    ],
     "https://onerecord.iata.org/ns/cargo#departureLocation":
     [  
         {
@@ -733,7 +745,10 @@ The transportMovement reflects the transportation on the air segment. It is prov
 }
 ```
 
-In our case, the required loadingActivity is also provided by the carrier, as we assume, that the CHA is not using ONE Record yet:
+
+**LoadingActivity** for loading the ULD (BUP) onto the aircraft
+
+In our case, the required loadingActivities are provided by the carrier, as we assume, that the CHA is not using ONE Record yet:
 
 ```json
 {
@@ -752,6 +767,8 @@ In our case, the required loadingActivity is also provided by the carrier, as we
     "https://onerecord.iata.org/ns/cargo#loadingType": "LOADING"
 }
 ```
+
+
 
 ### Custom´s process and data: PLACI Check
 
@@ -935,19 +952,22 @@ As soon as there´s a notification on available data, the customs party in this 
 
 **CheckLO for PLACI**
 
-Pre-Loading Clearance require the 
+Pre-Loading Clearance require customs to perform a check. Although there are different options for implementing this, the preferred solution is to link a checkLO into the checked object. This ensures:
 
-PreArrival CheckLO
+- transparency on the legitimicy of the status provider, as it is hosted by customs/authorities on their domain.
+- the ability to reverse check status at a later stage; triggers for this reversal can be new insights taken into account or changed base data from the shipper
 
-OPEN: USE OF MILESTONES
-
-WICHTIG: Check_Name
-		
 
 ```json
 {
     "@id": "http://{{customsDomain}}/logistics-objects/PLACI-2399393-check",
     "@type": "https://onerecord.iata.org/ns/cargo#Check",
+    "@name": "PLACI Compliance Check",
+	 "https://onerecord.iata.org/ns/cargo#checker":[
+        {
+            "@id": "https://1r.zoll.de"
+        }
+    ],
     "https://onerecord.iata.org/ns/cargo#checkedObjects":[
         {
             "@id": "https://1r.example.com/logistics-objects/piece-XXXXXXXX"
@@ -963,6 +983,78 @@ WICHTIG: Check_Name
 }
 ```
 
+
+The CheckLO contains the following data fields:
+
+checkName TODO: ADJUST IF ENDORSED DIFFERENTLY
+
+The @name field provides a human-readable label for the check. In this case, “PLACI Compliance Check” describes the nature of the process carried out by customs/authorities. The name is particularly useful for display purposes in user interfaces and dashboards and helps distinguish different check types within the same shipment record.
+
+checkedObjects
+
+The checkedObjects array lists one or more logistics objects that were the subject of this compliance check. Each entry is a URI pointing to the relevant object in the ONE Record network.
+In the example, the customs / authority checked a specific piece, referenced by its unique identifier.
+
+checkTotalResult
+
+The checkTotalResult field links this check to a separate CheckTotalResult object that contains the actual outcome of the screening. This approach allows the result to be managed independently of the check itself and keeps the model flexible for updates or corrections.
+
+Beyond those data fields that were used, there are some more fields than can be shared during the process:
+
+usedTemplate
+
+The usedTemplate field references the CheckTemplate object that defines further details the type, structure, and purpose of the check. By linking to a CheckTemplate, the Check object inherits its logic, predefined questions, and expected results. It´s use is optional and most effective, where the performance of the check and the provision of the sheet template are provided by different parties (e.g. DG Acceptance check: Template by Airline, execution by CHA). 
+
+performedAt
+
+The performedAt property links the check to a Location object that indicates where the activity physically or logically occurred. It is not required here as this is of no relevance.
+
+servedActivity
+
+The servedActivity property connects the check to a specific LogisticsActivity that it supports or validates.
+For instance, a pre-loading compliance check serves the “Loading” activity of the air transport process.
+This linkage helps trace checks back to operational milestones, ensuring that each activity is backed by the appropriate validation step.
+
+
+actionTimeType
+
+The actionTimeType field indicates the time classification of the check’s execution, such as “planned,” “actual,” or “estimated.” This helps distinguish between intended checks (e.g., planned regulatory check) and completed checks (actual execution time). In data-driven environments, it improves event sequencing and timeline analysis. If not filled, the standard interpretation is "actual", which is fully sufficient for our purpose.
+
+
+externalReferences
+
+The externalReferences field is used to connect the check to external documents. This could be used e.g. to provide a signed PDF with the check results, but is not applied here.
+
+contactDetails and contactPersons
+
+The contactDetails property provides contact information relevant to the check, such as email, phone number, or office address of the responsible authority or unit. The contactPersons field lists the individual actors who can provide information or verification regarding the check.
+
+They allow carriers or freight forwarders to reach out to the appropriate point of contact in case of clarifications. Not applied here.
+
+otherIdentifiers
+
+The otherIdentifiers property allows attaching any alternative or secondary identifiers that might be relevant for data integration. For instance, it can include internal system IDs, third-party system references, or legacy tracking codes used before ONE Record adoption. Not applied here
+
+actionStartTime
+
+The actionStartTime marks when the check began.
+This is especially relevant for processes where the duration of a check matters, such as temperature verification or security clearance cycles. Not applied here.
+
+checker
+
+The checker field identifies the actor that performed the check. It can be expressed as a simple string identifier, such as the domain of the customs authority (1r.zoll.de), or as a full Actor object that includes details like organization name, role, and contact information. This ensures the origin of the compliance decision is transparent and verifiable within the supply chain.
+
+actionEndTime
+
+The actionEndTime marks the moment when the compliance screening was completed. Not applied here.
+
+This timestamp represents when the customs authority finalized the “OK to Load”, “Do Not Load”, or “Request for Information” decision.
+
+**ChechTotalResultLO**
+
+Linked to the CheckLO is the CheckTotalResultLO, that contains the outcome of the check. 
+
+
 ```json
 {
     "@id": "http://{{customsDomain}}/logistics-objects/PLACI-2399393-result",
@@ -977,9 +1069,56 @@ WICHTIG: Check_Name
 }
 ```
 
+
+It contains the following data fields:
+
+resultOfCheck
+
+The resultOfCheck property links this result object back to the corresponding Check from which it originates. This connection ensures that every result is traceable to its source validation activity — for example, a PLACI Compliance Check or a Temperature Integrity Check. By maintaining this link, systems can navigate bidirectionally between the check and its final outcome.
+
+To ensure a clear attribution to the objects checked, we´d recommend to link only one check with a a single check, as this ensure low ambiguity and high flexibility.
+
+certifiedByActor
+
+The certifiedByActor field identifies the person or system responsible for certifying the result.
+In regulatory use cases, this could be a customs official, an automated risk assessment engine, or an authorized system. Including the certifier supports transparency and establishes accountability for the decision issued. Not applied here.
+
+resultValue
+
+The resultValue property expresses the actual outcome of the check in a structured form.
+For compliance checks, this may include standardized results such as `OK_TO_LOAD`, `DO_NOT_LOAD`, or `REQUEST_FOR_INFORMATION`. For other operational checks, the values could represent status codes or numeric assessments. 
+
+
+checks
+
+The checks property allows the CheckTotalResult to reference one or more subordinate checks that contributed to the final result, or e.g. internal revisions of the check results. It supports complex validation workflows while maintaining data traceability, but shouldn´t be applied for this use case, as the interpretation can be complex.
+
+
+externalReferences
+
+The externalReferences property links the result to documents. Not required here.
+
+checkRemark
+
+The checkRemark field provides free-text remarks or contextual notes about the result. It can be used to include brief explanations, system messages, or regulatory comments. This enhances human interpretability while maintaining a standardized data structure. No application for this use case.
+
+
+passed
+
+The passed field is a Boolean value that indicates whether the check was successful or not from a consumer´s perspective. A value of true generally means the shipment or piece passed the compliance check, while false indicates failure or pending status. Only the value `OK_TO_LOAD` triggers `true` in this use case, all other results trigger `false`. This field allows quick automated filtering and decision-making within logistics platforms.
+
+
+Typical result values are “OK_TO_LOAD”, “REQUEST_FOR_INFORMATION”, or “DO_NOT_LOAD”, corresponding to regulatory screening statuses.
+The linked result may also contain remarks and references to external documents such as ENS or ICS2 messages.
+
 Important: the "passed"-data field must only be "yes" if the result code "ACCEPTED / CLEAR", in all other cases, it must be "no".
 
+Beyond the data sharing aspect, it is recommended that the re-set the check result to "pending" as soon as one of the relevant primary data fields was changed, as the checked data is not aligned with the result anymore.  
+
 **CheckLO for Customs inspection**
+
+OPEN: USE OF MILESTONES
+
 
 
 ## Further potential
