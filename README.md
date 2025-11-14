@@ -770,9 +770,9 @@ In our case, the required loadingActivities are provided by the carrier, as we a
 
 
 
-### Custom´s process and data: PLACI Check
+## Custom´s process and data: PLACI Check
 
-# Pre-Loading Data Elements (7 + 1)
+### Pre-Loading Data Elements (7 + 1)
 
 To enable effective air cargo security screening before departure, regulatory authorities such as the European Union (ICS2), the United States (ACAS), and other jurisdictions have introduced Pre-Loading Advance Cargo Information (PLACI) programs. These frameworks require carriers and freight forwarders to electronically submit a small but essential set of data elements about each consignment prior to loading the goods onto the aircraft. The purpose is to allow a pre-departure risk assessment, enabling customs and security agencies to identify potentially high-risk consignments without disrupting the overall cargo flow.
 
