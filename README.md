@@ -84,10 +84,10 @@ This repository contains the good practice to implement data exchange in the con
 | **Step**                         | **Implementing party** | **AP1.2: Process Description** | **AP1.2: Sequence Diagram** | **AP1.2: LO Description** | **AP1.2: API Feature application** | **AP1.3: Postman Collection, Test-Execution, etc** | 
 |----------------------------------|------------------------|-------------------------|----------------------|--------------------|---------------------|------------------------|
 | **eCom Shipper: Data provision** | CHI                    | nok                     | nok                  | nok                | nok                 | nok                    |
-| **Customs: PLACI**               | LH Cargo               | 50%                     | nok                  | 50%                | nok                 | nok                    |
+| **Customs: PLACI**               | LH Cargo               | 50%                     | 70%                  | 50%                | 10%                 | 25%                    |
 | **Forwarder: BU**                | Schenker               | nok                     | nok                  | nok                | nok                 | nok                    |
 | **Forwarder: RFID part**         | LH Cargo               | nok                     | nok                  | nok                | nok                 | nok                    |
-| **Carrier: core transport**      | LH Cargo               | nok                     | nok                  | nok                | nok                 | nok                    |
+| **Carrier: core transport**      | LH Cargo               | 50%                     | 50%                  | 30%                | 35%                 | 40%                    |
 | **Customs: presentation status** | LH Cargo               | nok                     | nok                  | nok                | nok                 | nok                    |
 | **GHA Import**                   | CHI                    | nok                     | nok                  | nok                | nok                 | nok                    |
 
@@ -205,6 +205,88 @@ Remark: For the business interaction, all ONE Record data sharing is displayed a
 ```mermaid
 sequenceDiagram
     %% Jede Lifeline repraesentiert den Stakeholder inkl. seines ONE Record Endpoints
+    participant Shipper 
+    participant Forwarder
+    participant CHA Export
+    participant Customs
+    participant Carrier
+    participant Consignee
+
+    activate Shipper
+    Shipper->>Shipper: CREATE Pieces, Items
+    Shipper->>Forwarder: Notification for creation of Pieces
+    deactivate Shipper
+    activate Forwarder
+    Forwarder->>Shipper: GET Pieces, Items
+    Forwarder->>Forwarder: Check data, perform planning (updates)
+    Forwarder->>Forwarder: CREATE or PATCH Waybill(MAWB/HAWB), ULDs
+    deactivate Forwarder
+    Forwarder->>CHA Export: Notification for creation of Waybills, ULDs
+    Forwarder->>Customs: Notification for creation of Waybills, ULDs
+    Forwarder->>Carrier: Notification for creation of Waybills, ULDs
+    CHA Export->>Forwarder: GET Waybills, ULDs
+    CHA Export->>Shipper: GET Pieces, Items
+    CHA Export->>CHA Export: Check data, perform planning (updates)
+    Customs->>Forwarder: GET Waybills, ULDs
+    Customs->>Shipper: GET Pieces, Items
+    Carrier->>Forwarder: GET Waybills, ULDs
+    Carrier->>Shipper: GET Pieces, Items
+    Carrier->>Carrier: Check data, perform planning (updates)
+    Customs->>Customs: CREATE check for placi status
+    Customs->>Shipper: PATCH placi status into Piece
+    Shipper->>Forwarder: Notification for update of placi check
+    Shipper->>CHA Export: Notification for update of placi check
+    Shipper->>Carrier: Notification for update of placi check
+
+    Shipper-->>Forwarder: Provide physical freight (Pieces)
+    activate Forwarder
+    Forwarder-->>Forwarder: Build up ULDs
+    Forwarder->>CHA Export: Provide physical freight (ULDs)
+    deactivate Forwarder
+    activate CHA Export
+    CHA Export-->>CHA Export: Perform physical acceptance check
+    CHA Export->>Shipper: PATCH Status Update RCS into Pieces (Event)
+    CHA Export-->>Carrier: Handy over physical freight (ULDs)
+    CHA Export->>Shipper: PATCH Status Update FOW into Pieces (Event)
+    Shipper->>Customs: Notification for Status Update FOW
+    deactivate CHA Export
+    activate Customs
+    Customs->>Customs: CREATE check for customs presentation
+    Customs->>Shipper: PATCH customs presentation status into Piece
+    deactivate Customs
+    Shipper->>Carrier: Notification for update of customs presentation status
+    activate Carrier
+    Carrier->>Shipper: PATCH Status Update DEP into Pieces (Event)
+    Carrier-->>Carrier: Perform flight (DEP, ARR) and unload
+    deactivate Carrier
+
+    %% 6) Zollvorlage & Praesentation
+    alt Presentation not required
+        Carrier-->>Consignee: Deliver shipment
+    else Presentation required
+        Carrier-->>Customs: Present boxes 
+        Customs->>Shipper: PATCH customs presentation status update into Piece
+        Shipper->>Carrier: Notification for update of customs presentation status
+        Carrier-->>Consignee: Deliver shipment
+    end 
+
+
+```
+
+#### Remarks
+* The traditional Customs Declaration process is not integrated here - as it doesn´t differ from the conventional customs declaration process
+* The role "Carrier" includes the import Cargo Handling Agent role at the carrier hub, which is - in this case - also the import station
+* Logististics Objects are always mentioned in plural if it is likely that more than one object is used; still some objects, like ULD can have occure as single or multiple physical entities
+* Updates / Corrections are always possible, but not explicitly mentioned here. Any stakeholder can set a Change- / Clarification request at any time, and the data owner can react accordingly; in case of changes to data, all subscribed stakeholders would get notified and could react according to their processes
+* Full line: information flow; dotted line: physical flow
+* Notifications (PUB/SUB) are only mentioned when essential for the process; further notification, e.g. for the shipper, providing a significant additional benefit through improved transparency, are not mentioned here.
+
+
+### Initial Data Infrastructure
+
+```mermaid
+sequenceDiagram
+    %% Jede Lifeline repraesentiert den Stakeholder inkl. seines ONE Record Endpoints
     participant Shipper as "eCommerce Shipper"
     participant Forwarder
     participant GHA as "Cargo Handling Agent"
@@ -214,62 +296,11 @@ sequenceDiagram
     participant CHI as "CHI Import Team"
 
     %% 0) Access & Subscription
+
     Shipper->>Forwarder: GRANT Access Delegation (CREATE Authorization)
     Forwarder->>Shipper: Register Subscription (PUB/SUB setup)
-
-    %% 1) Ursprung & Datenerstellung
-    Shipper->>Forwarder: CREATE Logistics Objects (Pieces, Products)
-    Note right of Forwarder: PUB/SUB: Forwarder erhaelt neue Sendungsdaten
-    Shipper->>Forwarder: Provide physical freight (Pieces) - Business
-
-    %% 2) Konsolidierung & Transportdokumente
-    Note right of Forwarder: Internal process: Consolidate boxes, create Waybill (MAWB/HAWB) and ULD
-    Forwarder->>GHA: CREATE or PATCH Logistics Objects (Waybill, ULD)
-    Note right of GHA: PUB/SUB: Notification Pieces plus Waybill available
-    Forwarder->>Carrier: CREATE or PATCH Logistics Objects (Waybill, ULD)
-    Forwarder->>Customs: CREATE CustomsDeclaration (Pre-Alert / PLACI)
-
-    %% 3) PLACI / Vorpruefung
-    Customs->>Forwarder: PATCH Logistics Objects (Piece) - PLACI status update
-    Customs->>GHA: PATCH Logistics Objects (Piece) - PLACI status update
-
-    %% 4) Warenannahme & RCS
-    Forwarder->>GHA: Deliver BUPs - Business
-    Note right of GHA: Internal process: Perform goods acceptance (RCS)
-    GHA->>Carrier: CREATE Logistics Event (HandlingEvent RCS)
-
-    %% 5) Flugsegment & Meilensteine
-    Note right of Carrier: Internal process: Perform flight (DEP, ARR) and unload
-    Carrier->>Forwarder: PATCH Logistics Objects (TransportSegment) - DEP/ARR
-    Carrier->>Customs: CREATE Logistics Event (Presentation initiated)
-
-    %% 6) Zollvorlage & Praesentation
-    Customs->>Carrier: PATCH Logistics Objects (Shipment) - Presentation required
-    alt Presentation required
-        Carrier->>Customs: Present boxes - Business
-        Customs->>Carrier: PATCH Logistics Objects (Shipment) - Presentation completed
-    end
-
-    %% 7) Import-Clearance
-    Carrier->>Customs: Request import customs status - Business
-    Customs->>Carrier: PATCH Logistics Objects (Shipment) - ImportCustomsStatus updated
-
-    alt Import not ok
-        loop Clearance pending
-            CHI->>Customs: PATCH Logistics Objects (CustomsDeclaration) - SupportingDocuments updated
-            Customs->>Carrier: PATCH Logistics Objects (Shipment) - ImportCustomsStatus updated
-        end
-    else Import ok
-        Carrier->>Consignee: Deliver shipment - Business
-    end
 ```
 
-#### Remarks
-* The role "Carrier" includes the import Cargo Handling Agent role at the carrier hub, which is - in this case - also the import station 
-* Full line: physical flow
-* Dotted line: information flow
-* Notifications (PUB/SUB) are only mentioned when essential for the process; further notification, e.g. for the shipper, providing a significant additional benefit through improved transparency, are not mentioned here.
-* The process is designed around the current data types, it does not reflect a data-centric green-field approach 
 
 ### Shipper´s process and data
 
