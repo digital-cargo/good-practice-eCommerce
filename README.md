@@ -1137,7 +1137,7 @@ Issues related to this good practice are tracked on GitHub
 > Each good practice MUST have at least one maintainer who is responsible for ongoing development and quality assurance. 
 > Every maintainer MUST have commit access to the good practice repository.
 
-- [Oliver Ditz] (https://github.com/oditz), Fraunhofer IML 
+- [Oliver Ditz](https://github.com/oditz), Fraunhofer IML 
 - [Philipp Billion](https://github.com/DrPhilippBillion), Lufthansa Cargo
 
 _(sorted alphabetically)_
