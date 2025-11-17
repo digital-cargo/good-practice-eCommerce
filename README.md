@@ -116,13 +116,12 @@ The purpose of this document is to explain how eCommerce data can be shared most
 
 ### Scope
 
-This good practice details the application of the ONE Record standard specifically in the context of shipment tracking. 
-By using this good practice, organizations can understand, adopt, and streamline their shipment tracking offering to global best practice.
+This good practice details the application of the ONE Record standard specifically in the context of eCommerce data sharing. By using this good practice, organizations can understand, adopt, and streamline their eCommerce offering to global best practice.
 
 **What this document covers:**
 
 - **Business context**: Assumptions, prerequisites, and the broader business scenario where this good practice is applicable.
-- **Technical examples**: Detailed descriptions and examples of the API calls, data model classes, data mappings, and their applications in the context of shipment tracking.
+- **Technical examples**: Detailed descriptions and examples of the API calls, data model classes, data mappings, and their applications in the context of eCommerce.
 - **Transition recommendations**: Recommendations and guidelines that businesses should consider for a smooth and effective transition to ONE Record.
 
 **What this document does not cover:**
@@ -134,9 +133,6 @@ By using this good practice, organizations can understand, adopt, and streamline
 
 This guide is based on the published ONE Record specifications prevalent as of `xxxx-xx-xx`. 
 As the industry evolves, it is imperative for stakeholders to keep up to date on subsequent versions or changes to the standard.
-
-The interpretations is following 
-
 
 **Target audience**
 
@@ -152,13 +148,11 @@ An `item`....
 
 A `parcel`....
 
-`GHA`: Ground Handling Agent
+`CHA`: Ground Handling Agent
 
 **Geographical coverage**
 
-This eCommerce data sharing best practice is globally applicable, unhindered by regional or national distinctions. 
-With no legal or operational barriers to its adoption, the outlined solution is primed for worldwide deployment. 
-As a result, companies of any size, at any location, can take advantage of the standardized workflows and increased efficiencies created by ONE Record.
+This eCommerce data sharing best practice is globally applicable, unhindered by regional or national distinctions. With no legal or operational barriers to its adoption, the outlined solution is primed for worldwide deployment. As a result, companies of any size, at any location, can take advantage of the standardized workflows and increased efficiencies created by ONE Record.
 
 ### Variants
 
@@ -169,32 +163,16 @@ This section explores different scenarios within the context of the ONE Record S
 
 ### ONE Record Standard
 
-The implementation of shipment tracking as described in this good practice is based entirely on the [ONE Record standard](https://github.com/IATA-Cargo/ONE-Record).
-
-This good practice incorporates data classes of the [ONE Record cargo ontology v3.0.0](https://onerecord.iata.org/ns/cargo)
-and the [ONE Record core code lists ontology v0.0.3](https://onerecord.iata.org/ns/coreCodeLists).
-
-Furthermore, it utilises the [ONE Record API specificaiton v2.0.0](https://iata-cargo.github.io/ONE-Record/).
+This good practice incorporates data classes of the [ONE Record cargo ontology v3.0.0](https://onerecord.iata.org/ns/cargo) and the [ONE Record core code lists ontology v0.0.3](https://onerecord.iata.org/ns/coreCodeLists). Furthermore, it utilises the [ONE Record API specificaiton v2.0.0](https://iata-cargo.github.io/ONE-Record/).
 
 ### Related Good Practices
 
-The [ShipmentTracking](https://github.com/digital-cargo/good-practice-shipment-tracking) use case is closely related to the [ShipmentRecord](https://github.com/digital-cargo/good-practice-shipment-record) use case which is also based on the ONE Record standard. However, the eCommerce Data Sharing use case is focused to the exchange of eCommerce related information with other parties.
+The [ShipmentTracking](https://github.com/digital-cargo/good-practice-shipment-tracking) use case is related. However, the eCommerce Data Sharing use case is focused to the exchange of eCommerce related information with other parties.
 
 ### Piece-centricity and physics-orientation
 
-Today in air cargo, tracking information is typically provided at the shipment level, but the ONE Record data model follows the principle of piece-centricity as a core design principle.
-Another design principle of ONE Record is its aim to reflect the actual physical world, its objects and activities. 
+Today in air cargo, tracking information is typically provided at the shipment level, but the ONE Record data model follows the principle of piece-centricity as a core design principle.Another design principle of ONE Record is its aim to reflect the actual physical world, its objects and activities. Both principles find perfect application at the eCommerce use case. 
 
-For example, in ONE Record, it is not a legal object or a paper document such as the Air Waybill (AWB) that marks the progress of a shipment until it reaches a milestone. Instead, it is the actual [Piece](https://onerecord.iata.org/ns/cargo#Piece), the wrapping [Shipment](https://onerecord.iata.org/ns/cargo#Shipment), or a [TransportMovement](https://onerecord.iata.org/ns/cargo#TransportMovement) activity that reaches a milestone in the journey. 
-For example, when every piece in a shipment has been loaded and the aircraft departs, we consider the entire shipment as having departed.
-
-### skeletonIndicator
-
-The [skeletonIndicator](https://onerecord.iata.org/ns/cargo#skeletonIndicator) is a specific marker or flag used within data objects in the ONE Record standard. 
-The skeletonIndicator signifies that the data object and its properties act as placeholders and do not represent granular, individual data points. Instead, they offer a high-level or "skeletal" representation of the data, primarily for modeling piece-level data.
-
-It enables piece-level modeling of shipment data in a not fully piece-level environment that is in transition, but provides the basis for future developments. 
-This can be useful (1) when piece-level granularity is not required, (2) when non-integrable data sets are involved, (3) or when piece-level processing is not yet feasible in physical handling operations.
 
 ## Business Process and Data Sharing
 
@@ -275,9 +253,9 @@ sequenceDiagram
 
 #### Remarks
 * The traditional Customs Declaration process is not integrated here - as it doesn´t differ from the conventional customs declaration process
-* The role "Carrier" includes the import Cargo Handling Agent role at the carrier hub, which is - in this case - also the import station
-* Logististics Objects are always mentioned in plural if it is likely that more than one object is used; still some objects, like ULD can have occure as single or multiple physical entities
-* Updates / Corrections are always possible, but not explicitly mentioned here. Any stakeholder can set a Change- / Clarification request at any time, and the data owner can react accordingly; in case of changes to data, all subscribed stakeholders would get notified and could react according to their processes
+* The role "Carrier" includes the import Cargo Handling Agent role at the carrier hub, which is - usually and in this case - also the import station
+* Logististics Objects are always mentioned in plural if it is likely that more than one object is used; still most objects, like ULD can have occure as single or multiple physical entities
+* Updates / corrections are always possible within the process, but not explicitly mentioned here. Any stakeholder can set a Change- / Clarification request at any time, and the data owner can react accordingly; in case of changes to data, all subscribed stakeholders would get notified and could react according to their processes
 * Full line: information flow; dotted line: physical flow
 * Notifications (PUB/SUB) are only mentioned when essential for the process; further notification, e.g. for the shipper, providing a significant additional benefit through improved transparency, are not mentioned here.
 
@@ -1120,7 +1098,6 @@ Beyond the data sharing aspect, it is recommended that the re-set the check resu
 OPEN: USE OF MILESTONES
 
 
-
 ## Further potential
 
 - Potential beyond 7+1: with examples
@@ -1137,16 +1114,11 @@ see [digita-cargo/glossary](https://github.com/IATA-Cargo/ONE-Record/blob/fc8527
 
 ## References
 
-- ...
-- ...
-- ...
+(none)
   
 ## Acknowledgements
 
-tbd. [Philipp Billion](https://github.com/DrPhilippBillion) of Lufthansa Cargo as chairman.
-
-Special thanks to [Niclas Scheiber](https://github.com/NiclasScheiber), Frankfurt University of Applied Sciences for preparing version 3.0.0 of the 
-ONE Record core ontology in coordination with the IATA ONE Record data model focus group.
+Special thanks to [Niclas Scheiber](https://github.com/NiclasScheiber) of CHAMP Cargosystems, and Davide Alocci and his friendly collegues at IATA.
 
 ## Community
 
@@ -1165,8 +1137,7 @@ Issues related to this good practice are tracked on GitHub
 > Each good practice MUST have at least one maintainer who is responsible for ongoing development and quality assurance. 
 > Every maintainer MUST have commit access to the good practice repository.
 
-- Oliver Ditz, Fraunhofer IML
-- Christopher Enriquez Urban, Fraunhofer IML
+- [Oliver Ditz] (https://github.com/oditz), Fraunhofer IML 
 - [Philipp Billion](https://github.com/DrPhilippBillion), Lufthansa Cargo
 
 _(sorted alphabetically)_
@@ -1176,9 +1147,11 @@ _(sorted alphabetically)_
 > Every good practice is the result of the work of the community, and therefore the contribution of each individual should be recognized and appreciated. 
 > Below is a list of all the people who have actively contributed to this good practice.
 
-- Oliver Ditz, Fraunhofer IML
-- Oliver Meschkov, CHI
-- [Philipp Billion](https://github.com/DrPhilippBillion), Lufthansa Cargo
-- Christopher Enriquez Urban, Fraunhofer IML
+Main contributions were performed by 
 
-_(sorted alphabetically)_
+- [Oliver Ditz] (https://github.com/oditz) of Fraunhofer IML,
+- [Philipp Billion](https://github.com/DrPhilippBillion) of Lufthansa Cargo, 
+- [Milfat Mendoughe] (https://github.com/Milfat-M) of CHI Cargo,
+- [Christopher Enriquez Urban] (https://github.com/Chrisenur) of Fraunhofer IML, as well as 
+- [Oliver Meschkov](https://github.com/Meschkov) of CHI Cargo
+
