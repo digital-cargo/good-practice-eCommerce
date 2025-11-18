@@ -898,9 +898,9 @@ _(sorted alphabetically)_
 
 Main contributions were performed by 
 
-- [Oliver Ditz] (https://github.com/oditz) of Fraunhofer IML,
+- [Oliver Ditz](https://github.com/oditz) of Fraunhofer IML,
 - [Philipp Billion](https://github.com/DrPhilippBillion) of Lufthansa Cargo, 
-- [Milfat Mendoughe] (https://github.com/Milfat-M) of CHI Cargo,
-- [Christopher Enriquez Urban] (https://github.com/Chrisenur) of Fraunhofer IML, as well as 
+- [Milfat Mendoughe](https://github.com/Milfat-M) of CHI Cargo,
+- [Christopher Enriquez Urban](https://github.com/Chrisenur) of Fraunhofer IML, as well as 
 - [Oliver Meschkov](https://github.com/Meschkov) of CHI Cargo
 
