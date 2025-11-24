@@ -69,7 +69,6 @@ This repository contains the good practice to implement data exchange in the con
 
 ## DELME: STATUS / Open Issues
 
-- RFID must be separated into a separate good practice
 - PUB/SUB examples
 - Replace placeholders for servers
 - DESIGN ADDITIONAL DATA FIELDS
@@ -183,6 +182,9 @@ Remark: For the business interaction, all ONE Record data sharing is displayed a
 
 ```mermaid
 sequenceDiagram
+
+    autonumber
+
     %% Jede Lifeline repraesentiert den Stakeholder inkl. seines ONE Record Endpoints
     participant Shipper 
     participant Forwarder
@@ -662,6 +664,8 @@ The WaybillLO-data can also be provided by the Carrier, but here we follow the e
 
 ### Carrier´s process and data
 
+In the process, the carrier provides the core transportation and - in our case - performs the import process until the finalization of the customs presentation.  
+
 **TransportMovement**
 
 The transportMovement reflects the transportation on the air segment. It is provided by the carrier.
@@ -701,6 +705,8 @@ The transportMovement reflects the transportation on the air segment. It is prov
 }
 ```
 
+**loadingActivity**
+
 In our case, the required loadingActivity is also provided by the carrier, as we assume, that the CHA is not using ONE Record yet:
 
 ```json
@@ -720,6 +726,8 @@ In our case, the required loadingActivity is also provided by the carrier, as we
     "https://onerecord.iata.org/ns/cargo#loadingType": "LOADING"
 }
 ```
+
+Customs presentation check, the carrier checks for the customs presentation status provided by customs and either continues with the process, in case customs does not require presetation, or prepares the pyhsical presentation to customs in case that is required. 
 
 
 
@@ -903,4 +911,3 @@ Main contributions were performed by
 - [Milfat Mendoughe](https://github.com/Milfat-M) of CHI Cargo,
 - [Christopher Enriquez Urban](https://github.com/Chrisenur) of Fraunhofer IML, as well as 
 - [Oliver Meschkov](https://github.com/Meschkov) of CHI Cargo
-
