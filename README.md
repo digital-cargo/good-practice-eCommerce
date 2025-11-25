@@ -72,8 +72,7 @@ This repository contains the good practice to implement data exchange in the con
 - PUB/SUB examples // Standardize wording "triggered by PUB/SUB?" by "publication?"
 - Replace placeholders for servers
 - Add Access Delegation in Sequence Diagram
-- ChatGPT to optimize
-- RFID: potential for other application when 1R URI written into Tag 
+- RFID to be extracted: potential for other application when 1R URI written into Tag 
 - Use of Milestones for customs statuses (=> Diskussion mit Niclas)
 - CHECK Name: Change to Standard, not clear yet
 - Cascading PUB/SUB? Reicht es, auf das Piece subscribed zu sein, um über das Customs CheckLO notifiziert zu werden, wenn Customs einen Backlink fordert
@@ -183,7 +182,7 @@ Remark: For the business interaction, all ONE Record data sharing is displayed a
 ```mermaid
 sequenceDiagram
 
-    %% autonumber
+    autonumber
 
     %% Jede Lifeline repraesentiert den Stakeholder inkl. seines ONE Record Endpoints
     participant Shipper 
