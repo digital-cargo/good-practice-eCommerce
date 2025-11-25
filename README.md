@@ -69,15 +69,14 @@ This repository contains the good practice to implement data exchange in the con
 
 ## DELME: STATUS / Open Issues
 
-- RFID must be separated into a separate good practice
-- PUB/SUB examples
+- PUB/SUB examples // Standardize wording "triggered by PUB/SUB?" by "publication?"
 - Replace placeholders for servers
-- DESIGN ADDITIONAL DATA FIELDS
-- Add PUB/SUB in Sequence Diagram
-	- Data owner triggered SUB by Shipper and FF
+- Add Access Delegation in Sequence Diagram
 - ChatGPT to optimize
 - RFID: potential for other application when 1R URI written into Tag 
-
+- Use of Milestones for customs statuses (=> Diskussion mit Niclas)
+- CHECK Name: Change to Standard, not clear yet
+- Cascading PUB/SUB? Reicht es, auf das Piece subscribed zu sein, um über das Customs CheckLO notifiziert zu werden, wenn Customs einen Backlink fordert
 
 
 ## DELME: Status
@@ -85,11 +84,11 @@ This repository contains the good practice to implement data exchange in the con
 | **Step**                         | **Implementing party** | **AP1.2: Process Description** | **AP1.2: Sequence Diagram** | **AP1.2: LO Description** | **AP1.2: API Feature application** | **AP1.3: Postman Collection, Test-Execution, etc** | 
 |----------------------------------|------------------------|-------------------------|----------------------|--------------------|---------------------|------------------------|
 | **eCom Shipper: Data provision** | CHI                    | 90%                     | 90%                  | nok                | nok                 | nok                    |
-| **Customs: PLACI**               | LH Cargo               | 50%                     | nok                  | 50%                | nok                 | nok                    |
-| **Forwarder: BU**                | Schenker               | nok                     | nok                  | nok                | nok                 | nok                    |
-| **Forwarder: RFID part**         | LH Cargo               | nok                     | nok                  | nok                | nok                 | nok                    |
-| **Carrier: core transport**      | LH Cargo               | nok                     | nok                  | nok                | nok                 | nok                    |
-| **Customs: presentation status** | LH Cargo               | nok                     | nok                  | nok                | nok                 | nok                    |
+| **Customs: PLACI**               | LH Cargo               | 95%                     | 90%                  | 100%                | nok                 | nok                    |
+| **Forwarder: BU**                | Schenker               | nok                     | 90%                  | nok                | nok                 | nok                    |
+| **Forwarder: RFID part**         | LH Cargo               | SEPARATED               | SEPARATED            | SEPARATED          | SEPARATED           | SEPARATED              |
+| **Carrier: core transport**      | LH Cargo               | 95%                     | 95%                  | 95%                | 20%                 | nok                    |
+| **Customs: presentation status** | LH Cargo               | 50%                     | 50%                  | 80%                | 50%                 | nok                    |
 | **GHA Import**                   | CHI                    | 90%                     | 90%                  | nok                | nok                 | nok                    |
 
 
@@ -183,6 +182,9 @@ Remark: For the business interaction, all ONE Record data sharing is displayed a
 
 ```mermaid
 sequenceDiagram
+
+    %% autonumber
+
     %% Jede Lifeline repraesentiert den Stakeholder inkl. seines ONE Record Endpoints
     participant Shipper 
     participant Forwarder
@@ -237,6 +239,7 @@ sequenceDiagram
     activate Carrier
     Carrier->>Shipper: PATCH Status Update DEP into Pieces (Event)
     Carrier-->>Carrier: Perform flight (DEP, ARR) and unload
+    Carrier->>Customs: GET customs presentation status (latest update)
     deactivate Carrier
 
     %% 6) Zollvorlage & Praesentation
@@ -662,9 +665,18 @@ The WaybillLO-data can also be provided by the Carrier, but here we follow the e
 
 ### Carrier´s process and data
 
+n this good practice, the carrier is responsible for the core air transport and – in our scenario – also executes the import-side handling up to and including the completion of the customs presentation process.
+
+The carrier’s ONE Record responsibilities in this context are:
+
+- providing the air `TransportMovement` (flight segment),
+- providing the corresponding `Loading` activity (linking `ULDs` and `flight`),
+- consuming and acting on customs-related `Checks` (PLACI and customs presentation).
+
+
 **TransportMovement**
 
-The transportMovement reflects the transportation on the air segment. It is provided by the carrier.
+The `TransportMovement` logistics object represents the execution of the air leg. It is provided by the carrier and connects the operating aircraft, the departure and arrival locations, and the loading activities that belong to this leg.
 
 ```json
 {
@@ -701,7 +713,15 @@ The transportMovement reflects the transportation on the air segment. It is prov
 }
 ```
 
-In our case, the required loadingActivity is also provided by the carrier, as we assume, that the CHA is not using ONE Record yet:
+Key aspects:
+
+- departureLocation and arrivalLocation reference the airports (as Location LOs).
+- operatingTransportMeans references the aircraft (e.g. registration).
+- loadingActions links to one or more Loading activities that describe which ULDs (and thus which pieces) are actually loaded on this flight.
+
+**loadingActivity**
+
+In this scenario, we assume that the cargo handling agent (CHA) does not yet operate its own ONE Record server. Therefore, the carrier also publishes the Loading activity on behalf of the GHA, so that all parties can access a consistent digital twin of the physical loading situation.
 
 ```json
 {
@@ -720,10 +740,49 @@ In our case, the required loadingActivity is also provided by the carrier, as we
     "https://onerecord.iata.org/ns/cargo#loadingType": "LOADING"
 }
 ```
+Key aspects:
+
+- `loadedUnits` typically contains references to ULDs (e.g. AKE-4711) which in turn contain the relevant pieces.
+- servedActivity links this `loading` event to the `transportMovement` of the respective flight.
+- `loadingType` indicates the nature of the activity (here: loading onto the flight).
+
+In a more advanced setup, the GHA itself would expose these `loadings` via its own ONE Record endpoint; in this good practice, the carrier hosts them to reflect today’s operational reality.
 
 
+#### Interaction with customs presentation status
 
-## Custom´s process and data: PLACI Check
+During the process step customs presentation check, the carrier needs to know whether a physical customs presentation is required for a given piece or whether the piece can proceed directly to delivery.
+
+This is achieved by:
+
+1. Consuming customs `Check` logistics objects  
+   Customs creates `Check` and `CheckTotalResult` logistics objects (as described in the customs chapters). These objects are always linked to the `piece` and contain both the PLACI result and the customs presentation status.
+
+2. Receiving updates via PUB/SUB or pull
+   The carrier can obtain the latest customs status in two ways:
+   - by subscribing to updates on the `piece` or on the relevant `check` (recommended for real-time updates), and/or  
+   - by actively pulling the most recent customs-related `Check` at the relevant process step.  
+   
+   Both mechanisms may be combined for higher robustness and to support different system landscapes.
+
+3. Acting on the result  
+   - If no customs presentation is required, the carrier continues the standard import and delivery process and hands over the shipment to the consignee.
+   - If customs presentation is required, the carrier:
+     - creates or updates a local (short-haul) `TransportMovement` and related handling objects to move the piece(s) to the customs presentation area,
+     - waits for customs to perform the physical inspection and update the corresponding `CheckTotalResult`,
+     - then proceeds as follows:
+       - if the piece is released, it is moved back to the carrier’s warehouse flow and follows the normal delivery process,
+       - if the piece is not released, the carrier coordinates with shipper and/or forwarder regarding the next action (e.g., return shipment, destruction, or further clarification), following applicable regulations.
+
+The combination of
+- piece-level logistics objects,  
+- physical handling links (`Piece` → ULD → `Loading` → `TransportMovement`), and  
+- customs `CheckLOs`
+
+creates a consistent, piece-centric digital twin of the shipment. This enables all actors—carrier, forwarder, customs, and consignee—to interpret the regulatory and physical status of each piece accurately and reliably throughout the process.
+
+
+## Custom´s process and data
 
 ### Pre-Loading Data Elements (7 + 1)
 
@@ -743,69 +802,37 @@ The seven core data elements cover the essential identifiers for a shipment:
 
 The “+1” element completes the dataset by providing transport information, such as the carrier code, flight number, and planned departure date. This allows authorities to perform the screening before loading and to issue status messages like “OK to Load”, “Request for Information”, or “Do Not Load.”
 
-For this simulation, we´ll follow the current legal requirements, although a ONE Record infrastructure will provide 
+While this good practice follows today’s regulatory requirements, a `ONE Record` infrastructure can provide far richer data at higher quality and earlier in the process, enabling more holistic and data-driven customs risk assessment.
 
-#### Trigger
-
-The 
-
-?PUB/SUB
-
-Trigger for customs: 
-
-- Booking on AWB to FRA? 
-	- pro: earlier access
-	- con: no definite routing yet
-- Or Transport Movement
-	- pro: definite flight
-	- con: later
 
 **Data pull**
 
-According to the current framework, the 7+1 data elements must be provided for fulfilling pre-loading information requirements. Although ONE Record offers a lot more data at higher quality at an earlier stage, we will focus on providing these essential data fields. The additional potential is briefely described in the chapter "Further potential".
+Under current regulations, the PLACI "7+1" dataset satisfies the minimum requirement for pre-loading screening. Although ONE Record offers much more detailed information, this chapter focuses on the mandatory fields.
 
-One of the assumptions is that customs will work on piece level, as this is the operationally best option.
+Customs operates at `piece` level in this scenario, which aligns with the operational reality and the design principles of ONE Record.
 
-As soon as there´s a notification on available data, the customs party in this environment will pull the following Logistics objects and process the relevant data fields:
-
-- Piece only?
-	- Shipper: PieceLO
-	- C´nee: PieceLO
-	- Weight: PieceLO
-	- Number of Pieces: *irrelevant, as single piece reporting*
-	- Goods Description / HS Code: ProductLO
-	- AWB Number: WaybillLO (BUT CAN BE LINKED TO MAWB AND HAWB)
-	- Transport Document Type: *ONE Record Data Set?*
-	- UCR: *likely not reqd*
-
-	
-- or separated objects?
+Upon receiving a notification that new or updated data is available, customs pulls the relevant Logistics Objects and extracts the following fields:
 
 
 | # | Data Field | Description | ONE Record Mapping (LogisticsObject.DataField) | Example | Remark| 
 |---|-------------|----------------|----------------------------------------------------|----------|----------|
-| 1 | Shipper name and address | Full name and address of the original consignor responsible for sending the goods. Used to identify the origin of the shipment for risk assessment. | **piece.involvedParties** => **party.details** (party.partyRole) => **company** (company.name, company.location) | SHP, BrightWave Technologies Inc., 2450 Industrial Park Drive, Bloomington, IL 61704, US ||
-| 2 | Consignee name and address | Full name and address of the intended receiver of the goods. Enables identification and screening of the receiving party. | **piece.involvedParties** => **party.details** (party.partyRole) => **company** (company.name, company.location)| CNE, Shanghai Import Co. Ltd., Pudong Blvd. 55, Shanghai, CN |
+| 1 | Shipper name and address | Full name and address of the original consignor responsible for sending the goods. Used to identify the origin of the shipment for risk assessment. | **piece.involvedParties** => **party**; **party.details** => **company** (company.name, company.location) where party.partyRole = SHP | SHP, BrightWave Technologies Inc., 2450 Industrial Park Drive, Bloomington, IL 61704, US |Location is also a basic linked logistics object, but not separately mentioned here.|
+| 2 | Consignee name and address | Full name and address of the intended receiver of the goods. Enables identification and screening of the receiving party. | **piece.involvedParties** => **party**; **party.details** => **company** (company.name, company.location) where party.partyRole = CNE| CNE, Shanghai Import Co. Ltd., Pudong Blvd. 55, Shanghai, CN |Location is also a basic linked logistics object, but not separately mentioned here.|
 | 3 | Goods description | Clear, specific, and intelligible description of the cargo contents. Generic terms such as “freight” or “cargo” are not acceptable. | **piece.goodsDescription** | Smartphone accessories – chargers and cables |There are two options for the "Goods Description": either use the string field in the PieceLO, or use the linked Item/Product. The first option is pragmatic and easy, the second requires a more sophisticated system, but reveals an easy identification if many objects with identical nature of goods are provided. |
 | 4 | Total number of pieces | Total count of individual packages or handling units in the shipment. | - | 1 | One of the assumptions is that customs will work on piece level, as this is the operationally best option.|
 | 5 | Gross weight | Overall shipment weight including packaging, expressed with unit of measure. | **piece.grossWeight**| 145.0 kg |
-| 6 | Air Waybill number | Unique shipment identifier at master or house level; connects all shipment data and related events. | **piece.ofShipment** => **shipment.waybill** (waybill.waybillPrefix, waybill.waybillNumber)| 020-12345675 ||
-| 7 | Country of origin and destination | Derived from shipper and consignee addresses; used for routing and regulatory screening. | **piece.involvedParties** => **party.details** (party.partyRole) => **company** (company.name, company.location) | US → CN | Origian from *party.partyRole* = "SHP", destination from *party.partyRole* = CNE| 
+| 6 | Air Waybill number | Unique shipment identifier at master or house level; connects all shipment data and related events. | **piece.ofShipment** => **shipment.pieces**; **shipment.waybill** => **waybill.shipment**  (waybill.waybillPrefix, waybill.waybillNumber)| 020-12345675 | Waybill type must be set acconding to custom´s preference, is usually MAWB|
+| 7 | Country of origin and destination | Derived from shipper and consignee addresses; used for routing and regulatory screening. | **piece.involvedParties** => **party**; **party.details** => **company** (company.location) where party.partyRole = SHP plus **piece.involvedParties** => **party**; **party.details** => **company** (company.location) where party.partyRole = CNE | CN → BE | Country of origin is taken from *party.partyRole* = "SHP", country of destination from *party.partyRole* = CNE| 
 | +1 | Transport information | Links the consignment to its actual transport leg, including carrier, flight number, and departure date. | **piece.involvedInActions** => **loading.servedActivity** => **transportMovement**( transportMovement.transportIdentifier, ransportMovement.movementTimestamp | LH8406 // 2025-10-06 | selection of correct leg via Origin: outside EU / DEST: inside  
-
-
 
 
 **CheckLO for PLACI**
 
-Pre-Loading Clearance require the 
+PLACI screening requires customs to run a data-based evaluation and publish the outcome. `ONE Record` uses the `Check` and `CheckTotalResult` Logistics Objects to represent such evaluations in a standardized and transparent manner.
 
-PreArrival CheckLO
+Customs screens the digital twin of the `piece` using internal risk rules and publishes a `Check` LO linked to that `piece`. Because the results are hosted directly by customs, all other parties can verify status from a single authoritative source.
 
-OPEN: USE OF MILESTONES
-
-WICHTIG: Check_Name
-		
+Example `Check` LO (PLACI):	
 
 ```json
 {
@@ -826,6 +853,8 @@ WICHTIG: Check_Name
 }
 ```
 
+Additional to the check, the checkResult cotains the result of the check.  
+
 ```json
 {
     "@id": "http://{{customsDomain}}/logistics-objects/PLACI-2399393-result",
@@ -835,28 +864,83 @@ WICHTIG: Check_Name
             "@id": "http://{{customsDomain}}/logistics-objects/PLACI-2399393-check"
         }
     ],
-    "https://onerecord.iata.org/ns/cargo#passed": "yes",
-    "https://onerecord.iata.org/ns/cargo#checkRemark": "ACCEPTED / CLEAR"
+    "https://onerecord.iata.org/ns/cargo#checkRemark": "OK TO LOAD"
+}
+```
+Current PLACI statuses are:
+
+- `OK_TO_LOAD`
+- `REQUEST_FOR_INFORMATION`
+- `DO_NOT_LOAD`
+
+Suggested rules for standardizing the PLACI `Check` implementation in ONE Record:
+
+- Each screening must create exactly one `Check` LO and one corresponding `CheckTotalResult` LO (1:1 relationship).
+- If a screening is repeated, a new pair of `Check` and `CheckTotalResult` LOs must be created; existing objects must not be overwritten.
+- If underlying `piece` data or linked Logistics Objects change, customs may choose either to retain the previous check or to perform a new one.
+- Data consumers must determine the valid result by selecting the `Check` LO with the most recent `actionEndTime`.
+- If required information is missing, unclear, or inconsistent, the check should fail. Customs may optionally create a clarification request identifying the problematic data fields.
+ 
+
+**CheckLO for customs inspection status**
+
+The customs inspection status is shared analogue to PLACI Check. The LO look as follows:
+
+```json
+{
+    "@id": "http://{{customsDomain}}/logistics-objects/Customs-Presentation-2399393-check",
+    "@type": "https://onerecord.iata.org/ns/cargo#Check",
+    "https://onerecord.iata.org/ns/cargo#checkedObjects":[
+        {
+            "@id": "https://1r.example.com/logistics-objects/piece-XXXXXXXX"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#checkTotalResult":[
+        {
+            "@id": "https://1r.example.com/logistics-objects/Customs-Presentation-2399393-result"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#checker": "1r.zoll.de",
+    "https://onerecord.iata.org/ns/cargo#actionEndTime": "xxxxxx"
 }
 ```
 
-Important: the "passed"-data field must only be "yes" if the result code "ACCEPTED / CLEAR", in all other cases, it must be "no".
+Additional to the check, the checkResult cotains the result of the check.  
 
-**CheckLO for Customs inspection**
+```json
+{
+    "@id": "http://{{customsDomain}}/logistics-objects/Customs-Presentation-2399393-result",
+    "@type": "https://onerecord.iata.org/ns/cargo#CheckTotalResult",
+    "https://onerecord.iata.org/ns/cargo#resultOfCheck":[
+        {
+            "@id": "http://{{customsDomain}}/logistics-objects/Customs-Presentation-2399393-check"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#checkRemark": "NO PRESENTATION REQUIRED"
+}
+```
+## Further optimization potential
 
-OPEN: USE OF MILESTONES
+### Potential beyond the 7+1 data elements
 
+The current 7+1 framework reflects the limitations of legacy messaging infrastructures. `ONE Record`, however, enables the exchange of far richer information, at higher quality and at much earlier points in the process. This allows customs authorities to move from receiving a fixed set of pushed attributes to pulling all relevant data on demand and applying advanced, data-driven risk analysis methods.  
+In this context, the 7+1 elements may serve as a baseline, but no longer represent the upper limit of what can be assessed.
 
-## Further potential
+Examples of additional data that may support enhanced risk assessment include:
 
-- Potential beyond 7+1: with examples
-- Event for PLACI status?
+- Extended shipper and consignee information  
+  Such as links to historical shipments, planned shipments, organizational structure, dependencies, responsible contact persons, associated websites, or company certificates.
 
-## Special Cases:
+- Extended piece and item-level details  
+  Including detailed product descriptions in linked `item` and `product` objects, batch numbers, production dates, enhanced identifiers, manufacturer details, per-item weights and dimensions, and external product references.
 
-Item / Piece
+### Event for PLACI status?
 
-## Guidelines for implementation
+(to be decided on after meeting with Niclas)
+
+### Additional transparency for customs presentation results
+
+As a suggestion, two additional statuses should be introduced after a presentation was performed: "PRESENTATION PERFORMED - RELEASED" and "PRESENTATION PERFORMED - NOT RELEASED" and shared as check results as well. This would bring additional transparency in a process that is not usually not transparent with means of data exchange. 
 
 ## Glossary
 see [digita-cargo/glossary](https://github.com/IATA-Cargo/ONE-Record/blob/fc8527959754a69a00fcc36d97a0c446618f435f/working_draft/API/docs/glossary.md)
@@ -903,4 +987,3 @@ Main contributions were performed by
 - [Milfat Mendoughe](https://github.com/Milfat-M) of CHI Cargo,
 - [Christopher Enriquez Urban](https://github.com/Chrisenur) of Fraunhofer IML, as well as 
 - [Oliver Meschkov](https://github.com/Meschkov) of CHI Cargo
-
