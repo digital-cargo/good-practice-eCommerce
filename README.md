@@ -986,3 +986,140 @@ Main contributions were performed by
 - [Milfat Mendoughe](https://github.com/Milfat-M) of CHI Cargo,
 - [Christopher Enriquez Urban](https://github.com/Chrisenur) of Fraunhofer IML, as well as 
 - [Oliver Meschkov](https://github.com/Meschkov) of CHI Cargo
+
+
+
+---------
+
+### Trigger
+
+The 
+##### Pub/Sub (Publish and Subscribe)
+
+?PUB/SUB
+Since the FF holds the data, the Customs Authority must be registered as a Subscriber to the House Waybill.
+
+Trigger for customs: 
+In the case where the Forwarder needs to ensure the Customs Authority is subscribed (Publisher-initiated Subscription).
+
+- Booking on AWB to FRA? 
+	- pro: earlier access
+	- con: no definite routing yet
+- Or Transport Movement
+	- pro: definite flight
+	- con: later
+Scenario: FF Ensures Customs Subscribes to HAWB for PLACI Event Notifications
+
+| # | Actor | Action/Object | Technical Detail (API Focus) |
+|---|-------------|----------------|----------------------------------------------------|
+| 1. FF Requests Subscription Information| FF (Publisher) | GET /subscriptions. | The FF retrieves the subscription details from the Customs server (Subscriber) using query parameters identifying the specific HAWB URI. |
+| 2.  Customs Returns Configuration | Customs Server | 200 OK + api:Subscription | The Customs server returns the necessary Subscription object containing configuration details, including the desired api:includeSubscriptionEventType.|
+| 3. FF Creates Subscription Request | FF  | POST /action-requests api:SubscriptionRequest | The FF formally registers the subscription on its own server using the details received from Customs. This registration allows the FF server to trigger future notifications. |
+| 4. Notification Sent | FF Server | POST api:Notification | The FF server automatically sends an api:Notification to the Customs callback URL, alerting them to the new event. |
+
+FF Requesting Subscription:
+
+GET https://{{customsDomain}}/subscriptions?topicType=https://onerecord.iata.org/ns/api#LOGISTICS_OBJECT_IDENTIFIER&topic=http://{{forwarderDomain}}/logistics-objects/waybill-020-2222222
+Authorization: Bearer <FF_JWT_Token>
+
+Customs Server Response (200 OK, excerpt):
+
+```json
+{
+  "@context": { "api": "https://onerecord.iata.org/ns/api#" },
+  "@type": "api:Subscription",
+  "api:hasTopicType": [
+    { "@id": "https://onerecord.iata.org/ns/api#LOGISTICS_OBJECT_IDENTIFIER" }
+  ],
+  "api:hasTopic": [
+    { "@value": "http://{{forwarderDomain}}/logistics-objects/waybill-020-2222222" }
+  ],
+  "api:hasSubscriber": [
+    { "@id": "https://{{customsDomain}}/organizations/customs" }
+  ],
+  "api:includeSubscriptionEventType": [
+    { "@id": "https://onerecord.iata.org/ns/api#LOGISTICS_EVENT_RECEIVED" },
+    { "@id": "https://onerecord.iata.org/ns/api#LOGISTICS_OBJECT_UPDATED" }
+  ]
+}
+```
+
+FF Posts Subscription Request to its own Server
+
+The FF registers the subscription configuration on its local server using a SubscriptionRequest.
+
+POST https://{{forwarderDomain}}/action-requests
+Accept: application/ld+json
+Content-Type: application/ld+json
+
+```json
+{
+  "@context": { "api": "https://onerecord.iata.org/ns/api#" },
+  "@type": "api:SubscriptionRequest",
+  "api:hasSubscription": [
+    "@type": "api:Subscription",
+	  "api:hasTopicType": [
+	    { "@id": "https://onerecord.iata.org/ns/api#LOGISTICS_OBJECT_IDENTIFIER" }
+	  ],
+	  "api:hasTopic": [
+	    { "@value": "http://{{forwarderDomain}}/logistics-objects/waybill-020-2222222" }
+	  ],
+	  "api:hasSubscriber": [
+	    { "@id": "https://{{customsDomain}}/organizations/customs" }
+	  ],
+	  "api:includeSubscriptionEventType": [
+	    { "@id": "https://onerecord.iata.org/ns/api#LOGISTICS_EVENT_RECEIVED" },
+	    { "@id": "https://onerecord.iata.org/ns/api#LOGISTICS_OBJECT_UPDATED" }
+	  ]
+  ],
+  "api:isRequestedBy": [
+    { "@id": "https://{{forwarderDomain}}/organizations/forwarder" }
+  ]
+}
+```
+
+#### Access Delegation
+
+Access Delegation grants the Customs Authority  the right to directly retrieve (pull) the complete data set required for PLACI.
+
+| # | Actor | Action/Object | Technical Detail (API Focus) |
+|---|-------------|----------------|----------------------------------------------------|
+| 1. Delegation Request | FF (Delegator) | POST /action-delegations | The FF creates an AccessDelegation specifying the HAWB URI as the target object and granting api:GET_LOGISTICS_OBJECT permission to the Customs Authority organization. |
+| 2. Delegation Approval | FF Server | 201 Created | The request is accepted, and access control lists (ACLs) are updated on the FF server. The request moves to api:REQUEST_ACCEPTED state. |
+| 3. Data Retrieval | Customs (Delegate) | GET Logistics Object | Customs can now pull the specific HAWB/Shipment data directly from the FF’s ONE Record server when needed, ensuring access to the latest data version. |
+
+Creating an Access Delegation Request
+
+The FF posts the request to its own server, granting GET rights for the specific HAWB URI.
+
+POST https://{{forwarderDomain}}/access-delegations
+Content-Type: application/ld+json
+
+```json
+{
+  "@context": {
+    "api": "https://onerecord.iata.org/ns/api#",
+    "cargo": "https://onerecord.iata.org/ns/cargo#"
+  },
+  "@type": "api:AccessDelegation",
+	"api:hasDescription": "Require access for PLACI",	
+	"api:hasPermission": [
+        {
+            "@id": "api:GET_LOGISTICS_OBJECT"
+        }
+    ],
+    "api:isRequestedFor": [
+        {
+            "@id": "https://{{customsDomain}}/organizations/customs"
+        }
+    ],
+    "api:notifyRequestStatusChange": True,
+    "api:hasLogisticsObject": [
+        {
+            "@id": "http://{{forwarderDomain}}/logistics-objects/waybill-020-2222222"
+        }
+    ]
+}
+```
+
+**Data pull**
