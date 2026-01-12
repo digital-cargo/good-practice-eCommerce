@@ -200,11 +200,13 @@ sequenceDiagram
     Forwarder->>Shipper: GET Pieces, Items
     Forwarder->>Forwarder: Check data, perform planning (updates)
     Forwarder->>Forwarder: CREATE or PATCH Waybill(MAWB/HAWB), ULDs
-    deactivate Forwarder
-    rect rgb(230,245,255)
-        Forwarder->>Customs: AccessDelegation Pieces (& other objects)
-        Forwarder->>Customs: Subscription on Pieces (& other objects)
+       rect rgb(230,245,255)
+       Forwarder->>Customs: AccessDelegation Pieces (& other objects)
+       Customs-->>Shipper: (gets access rights on Pieces)
+       Forwarder->>Customs: Subscription on Pieces (& other objects)
+       Customs-->>Shipper: (is subscribed on Pieces)
     end
+    deactivate Forwarder
     Forwarder->>CHA Export: Notification for creation of Waybills, ULDs
     Forwarder->>Customs: Notification for creation of Waybills, ULDs
     Forwarder->>Carrier: Notification for creation of Waybills, ULDs
@@ -254,8 +256,6 @@ sequenceDiagram
         Shipper->>Carrier: Notification for update of customs presentation status
         Carrier-->>Consignee: Deliver shipment
     end 
-
-
 
 ```
 
