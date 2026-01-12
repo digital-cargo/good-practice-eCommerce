@@ -890,6 +890,129 @@ The backward link in the shipment must be set in the "waybill"-data field.
 
 The WaybillLO-data can also be provided by the Carrier, but here we follow the established process.
 
+#### Subscription flow (Forwarder-initiated)
+
+The subscription flow complements Access Delegation by providing a **publish/subscribe (PUB/SUB) notification mechanism**. While Access Delegation enables Customs to pull data on demand, subscriptions ensure that Customs is **proactively informed** when relevant data changes occur. This allows Customs to react in a timely manner without continuously polling the Shipper’s ONE Record server.
+
+In this model, the **Forwarder acts as the orchestrator** of the process. The Forwarder ensures that Customs is correctly registered as a subscriber to the relevant logistics objects (typically `Piece` objects) hosted on the Shipper’s ONE Record server. This reflects the Forwarder’s operational role in coordinating regulatory compliance while avoiding duplication of data ownership.
+
+Once the subscription is established, the **Shipper publishes notifications** whenever the subscribed logistics object is created, updated, or when relevant logistics events are received. These notifications act as triggers only; they do not contain the full data set. Upon receiving a notification, Customs retrieves the required information by performing a controlled pull (`GET`) request against the authoritative data source.
+
+This separation of **notification (push)** and **data retrieval (pull)** improves scalability, avoids redundant data transmission, and ensures that Customs always accesses the latest data state.
+
+---
+
+##### Process Overview
+
+| # | Actor | Action/Object | Technical detail (API focus) |
+|---|-------|---------------|------------------------------|
+| 1 | Forwarder | Ensures Customs subscription | The Forwarder initiates the subscription so that Customs is registered as subscriber to the Shipper’s `Piece` logistics objects. Alternatively, the Carrier may subscribe Customs on the relevant pieces, reflecting today’s effective operational process. |
+| 2 | Forwarder | Create subscription | `POST /subscriptions` on the Shipper’s ONE Record server, pointing to the `Piece` as topic and Customs as subscriber. |
+| 3 | Shipper | Confirms subscription | `201 Created` with an `api:Subscription` resource defining topic, event types, and notification endpoint. |
+| 4 | Shipper | Publishes notifications | `POST /notifications` to Customs whenever the subscribed `Piece` is created, updated, or relevant events are received. |
+| 5 | Customs | Pulls required data | Customs retrieves the required data via `GET /logistics-objects/{id}` for the `Piece` and linked logistics objects as needed. |
+
+---
+
+##### Example: Forwarder subscribes Customs on a Shipper `Piece`
+
+The following JSON example illustrates a subscription created by the Forwarder on the Shipper’s ONE Record server. The subscription registers the Customs Authority as subscriber to a specific `Piece` logistics object and defines the event types that will trigger notifications. The subscription itself does not grant data access rights; it is intended to be used in combination with Access Delegation (see next chapter) for controlled data retrieval.
+
+```json
+{
+    "@context": {
+        "cargo": "https://onerecord.iata.org/ns/cargo#",
+        "api": "https://onerecord.iata.org/ns/api#"
+    },
+    "@type": "api:Subscription",
+    "api:hasContentType": "application/ld+json",
+    "api:hasSubscriber": {
+        "@id": "{{Customs}}/logistics-objects/{{companyId}}"
+    },
+    "api:hasTopicType": {
+        "@id": "api:LOGISTICS_OBJECT_IDENTIFIER"
+    },
+    "api:includeSubscriptionEventType": [
+        {
+            "@id": "api:LOGISTICS_OBJECT_UPDATED"
+        },
+        {
+            "@id": "api:LOGISTICS_OBJECT_CREATED"
+        },
+        {
+            "@id": "api:LOGISTICS_EVENT_RECEIVED"
+        }
+    ],
+    "api:hasTopic": {
+        "@type": "http://www.w3.org/2001/XMLSchema#anyURI",
+        "@value": "{{shipper}}/logistics-objects/{{pieceId}}"
+    }
+}
+```
+
+
+#### Access Delegation
+
+Access Delegation enables the Customs Authority to directly retrieve (pull) the data set required for PLACI from the **Shipper’s ONE Record server**, while the **Forwarder acts as the delegator requesting the access**.
+
+Access Delegation is shown here as an example because it represents the **central process step** enabling Customs to retrieve PLACI-relevant data directly from the authoritative source. The same mechanism is **not limited to this use case** and can be applied to other processes and actors wherever controlled, pull-based access to ONE Record logistics objects is required (e.g. security screening, ground handling, regulatory reporting, or partner data sharing).
+
+This model reflects common eCommerce and PLACI setups where the PLACI-relevant data is hosted in the pieceLO by the Shipper, but operational responsibility and coordination with Customs sits with the Forwarder.
+
+
+##### Process Overview
+
+| # | Actor | Action/Object | Technical Detail (API Focus) |
+|---|----------------------|------------------------------|--------------------------------------------------------------|
+| 1 | Forwarder (Delegator) | POST /action-delegations (Shipper Server) | The Forwarder creates an `api:AccessDelegation` on the **Shipper’s ONE Record server**, specifying the relevant logistics object(s) and granting `api:GET_LOGISTICS_OBJECT` permission to the Customs Authority organization. |
+| 2 | Shipper Server | 201 Created | The Shipper server accepts the request, updates its access control lists (ACLs), and transitions the delegation to `api:REQUEST_ACCEPTED`. |
+| 3 | Customs (Delegate) | GET Logistics Object (Shipper Server) | Customs can now pull the delegated Piece data directly from the **Shipper’s ONE Record server**, ensuring access to the latest authoritative data version. |
+
+
+##### Key Characteristics
+
+The access delegation is **initiated by the Forwarder**, who requests access on behalf of the overall transport and compliance process. While the Forwarder coordinates the interaction with Customs, it does not host the data itself and therefore does not act as the authoritative data source.
+
+The **authoritative data source remains the Shipper**. All data retrieval by the Customs Authority is performed directly against the Shipper’s ONE Record server, ensuring that Customs always accesses the most recent and authoritative version of the logistics data.
+
+The mechanism supports **fine-grained, read-only access control**. Permissions are explicitly limited to `api:GET_LOGISTICS_OBJECT` and apply only to the logistics objects referenced in the delegation, preventing unintended access to unrelated data.
+
+This approach follows a **PLACI-aligned control model**. It allows Customs to perform repeated data queries prior to departure without requiring redundant data pushes or resubmissions, thereby reducing complexity while improving data consistency and reliability.
+
+---
+
+##### Example: Access Delegation Request  
+
+The following JSON example illustrates an `api:AccessDelegation` request used to grant the Customs Authority read access to a specific logistics object for PLACI purposes. The delegation is created by the Forwarder on the Shipper’s ONE Record server and authorizes Customs to retrieve the referenced object on demand.
+
+```json
+{
+  "@context": {
+    "api": "https://onerecord.iata.org/ns/api#",
+    "cargo": "https://onerecord.iata.org/ns/cargo#"
+  },
+  "@type": "api:AccessDelegation",
+  "api:hasDescription": "Require access for PLACI",
+  "api:hasPermission": [
+    {
+      "@id": "api:GET_LOGISTICS_OBJECT"
+    }
+  ],
+  "api:isRequestedFor": [
+    {
+      "@id": "https://{{customsDomain}}/organizations/customs"
+    }
+  ],
+  "api:notifyRequestStatusChange": true,
+  "api:hasLogisticsObject": [
+    {
+      "@id": "https://{{shipperDomain}}/logistics-objects/pieceID"
+    }
+  ]
+}```
+
+
+
 ### Carrier´s process and data
 
 n this good practice, the carrier is responsible for the core air transport and – in our scenario – also executes the import-side handling up to and including the completion of the customs presentation process.
@@ -1010,6 +1133,31 @@ creates a consistent, piece-centric digital twin of the shipment. This enables a
 
 
 ## Custom´s process and data
+
+### Pub/Sub (Publish & Subscribe) for Customs
+
+In a ONE Record architecture, Customs typically consumes data by pulling it from the data owner’s endpoint, while notifications (PUB/SUB) are used to learn when relevant data is available or has changed.  
+As this Good Practice focuses on the application of this In this good practice, the **Forwarder ensures that Customs is subscribed to the Shipper’s `Piece` logistics objects**, so that Customs is notified whenever relevant data becomes available or is updated.
+
+This approach reflects today’s operational reality, where the Forwarder coordinates regulatory readiness while the Shipper remains the authoritative data owner for piece-level information.
+
+#### Recommended subscription topics
+
+Customs data screening is commonly performed at piece level. Therefore the recommended subscription topic is the Shipper’s `Piece` URI(s). Alternatively or additionally, customs could subscribe on `Shipment` or `Waybill` URIs.
+
+Typical event types to include:
+
+- `api:LOGISTICS_OBJECT_CREATED`
+
+Indicates that a new logistics object (e.g. Shipment, Piece, Waybill) has been created and is now available in the publisher’s ONE Record server.
+
+- `api:LOGISTICS_OBJECT_UPDATED`
+
+Indicates that an existing logistics object has been modified.
+
+- Optional: `api:LOGISTICS_EVENT_RECEIVED` (if the process relies heavily on events)
+
+Indicates that a logistics event related to an object has been received or recorded (e.g. FOH, RCS).
 
 ### Pre-Loading Data Elements (7 + 1)
 
@@ -1214,140 +1362,3 @@ Main contributions were performed by
 - [Milfat Mendoughe](https://github.com/Milfat-M) of CHI Cargo,
 - [Christopher Enriquez Urban](https://github.com/Chrisenur) of Fraunhofer IML, as well as 
 - [Oliver Meschkov](https://github.com/Meschkov) of CHI Cargo
-
-
-
----------
-
-### Trigger
-
-The 
-##### Pub/Sub (Publish and Subscribe)
-
-?PUB/SUB
-Since the FF holds the data, the Customs Authority must be registered as a Subscriber to the House Waybill.
-
-Trigger for customs: 
-In the case where the Forwarder needs to ensure the Customs Authority is subscribed (Publisher-initiated Subscription).
-
-- Booking on AWB to FRA? 
-	- pro: earlier access
-	- con: no definite routing yet
-- Or Transport Movement
-	- pro: definite flight
-	- con: later
-Scenario: FF Ensures Customs Subscribes to HAWB for PLACI Event Notifications
-
-| # | Actor | Action/Object | Technical Detail (API Focus) |
-|---|-------------|----------------|----------------------------------------------------|
-| 1. FF Requests Subscription Information| FF (Publisher) | GET /subscriptions. | The FF retrieves the subscription details from the Customs server (Subscriber) using query parameters identifying the specific HAWB URI. |
-| 2.  Customs Returns Configuration | Customs Server | 200 OK + api:Subscription | The Customs server returns the necessary Subscription object containing configuration details, including the desired api:includeSubscriptionEventType.|
-| 3. FF Creates Subscription Request | FF  | POST /action-requests api:SubscriptionRequest | The FF formally registers the subscription on its own server using the details received from Customs. This registration allows the FF server to trigger future notifications. |
-| 4. Notification Sent | FF Server | POST api:Notification | The FF server automatically sends an api:Notification to the Customs callback URL, alerting them to the new event. |
-
-FF Requesting Subscription:
-
-GET https://{{customsDomain}}/subscriptions?topicType=https://onerecord.iata.org/ns/api#LOGISTICS_OBJECT_IDENTIFIER&topic=http://{{forwarderDomain}}/logistics-objects/waybill-020-2222222
-Authorization: Bearer <FF_JWT_Token>
-
-Customs Server Response (200 OK, excerpt):
-
-```json
-{
-  "@context": { "api": "https://onerecord.iata.org/ns/api#" },
-  "@type": "api:Subscription",
-  "api:hasTopicType": [
-    { "@id": "https://onerecord.iata.org/ns/api#LOGISTICS_OBJECT_IDENTIFIER" }
-  ],
-  "api:hasTopic": [
-    { "@value": "http://{{forwarderDomain}}/logistics-objects/waybill-020-2222222" }
-  ],
-  "api:hasSubscriber": [
-    { "@id": "https://{{customsDomain}}/organizations/customs" }
-  ],
-  "api:includeSubscriptionEventType": [
-    { "@id": "https://onerecord.iata.org/ns/api#LOGISTICS_EVENT_RECEIVED" },
-    { "@id": "https://onerecord.iata.org/ns/api#LOGISTICS_OBJECT_UPDATED" }
-  ]
-}
-```
-
-FF Posts Subscription Request to its own Server
-
-The FF registers the subscription configuration on its local server using a SubscriptionRequest.
-
-POST https://{{forwarderDomain}}/action-requests
-Accept: application/ld+json
-Content-Type: application/ld+json
-
-```json
-{
-  "@context": { "api": "https://onerecord.iata.org/ns/api#" },
-  "@type": "api:SubscriptionRequest",
-  "api:hasSubscription": [
-    "@type": "api:Subscription",
-	  "api:hasTopicType": [
-	    { "@id": "https://onerecord.iata.org/ns/api#LOGISTICS_OBJECT_IDENTIFIER" }
-	  ],
-	  "api:hasTopic": [
-	    { "@value": "http://{{forwarderDomain}}/logistics-objects/waybill-020-2222222" }
-	  ],
-	  "api:hasSubscriber": [
-	    { "@id": "https://{{customsDomain}}/organizations/customs" }
-	  ],
-	  "api:includeSubscriptionEventType": [
-	    { "@id": "https://onerecord.iata.org/ns/api#LOGISTICS_EVENT_RECEIVED" },
-	    { "@id": "https://onerecord.iata.org/ns/api#LOGISTICS_OBJECT_UPDATED" }
-	  ]
-  ],
-  "api:isRequestedBy": [
-    { "@id": "https://{{forwarderDomain}}/organizations/forwarder" }
-  ]
-}
-```
-
-#### Access Delegation
-
-Access Delegation grants the Customs Authority  the right to directly retrieve (pull) the complete data set required for PLACI.
-
-| # | Actor | Action/Object | Technical Detail (API Focus) |
-|---|-------------|----------------|----------------------------------------------------|
-| 1. Delegation Request | FF (Delegator) | POST /action-delegations | The FF creates an AccessDelegation specifying the HAWB URI as the target object and granting api:GET_LOGISTICS_OBJECT permission to the Customs Authority organization. |
-| 2. Delegation Approval | FF Server | 201 Created | The request is accepted, and access control lists (ACLs) are updated on the FF server. The request moves to api:REQUEST_ACCEPTED state. |
-| 3. Data Retrieval | Customs (Delegate) | GET Logistics Object | Customs can now pull the specific HAWB/Shipment data directly from the FF’s ONE Record server when needed, ensuring access to the latest data version. |
-
-Creating an Access Delegation Request
-
-The FF posts the request to its own server, granting GET rights for the specific HAWB URI.
-
-POST https://{{forwarderDomain}}/access-delegations
-Content-Type: application/ld+json
-
-```json
-{
-  "@context": {
-    "api": "https://onerecord.iata.org/ns/api#",
-    "cargo": "https://onerecord.iata.org/ns/cargo#"
-  },
-  "@type": "api:AccessDelegation",
-	"api:hasDescription": "Require access for PLACI",	
-	"api:hasPermission": [
-        {
-            "@id": "api:GET_LOGISTICS_OBJECT"
-        }
-    ],
-    "api:isRequestedFor": [
-        {
-            "@id": "https://{{customsDomain}}/organizations/customs"
-        }
-    ],
-    "api:notifyRequestStatusChange": True,
-    "api:hasLogisticsObject": [
-        {
-            "@id": "http://{{forwarderDomain}}/logistics-objects/waybill-020-2222222"
-        }
-    ]
-}
-```
-
-**Data pull**
