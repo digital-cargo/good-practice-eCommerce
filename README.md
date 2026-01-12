@@ -82,8 +82,8 @@ This repository contains the good practice to implement data exchange in the con
 
 | **Step**                         | **Implementing party** | **AP1.2: Process Description** | **AP1.2: Sequence Diagram** | **AP1.2: LO Description** | **AP1.2: API Feature application** | **AP1.3: Postman Collection, Test-Execution, etc** | 
 |----------------------------------|------------------------|-------------------------|----------------------|--------------------|---------------------|------------------------|
-| **eCom Shipper: Data provision** | CHI                    | 90%                     | 90%                  | nok                | nok                 | nok                    |
-| **Customs: PLACI**               | LH Cargo               | 95%                     | 90%                  | 100%                | nok                 | nok                    |
+| **eCom Shipper: Data provision** | CHI                    | 90%                     | 100%                  | nok                | nok                 | nok                    |
+| **Customs: PLACI**               | LH Cargo               | 100%                     | 100%                  | 100%                | nok                 | nok                    |
 | **Forwarder: BU**                | Schenker               | nok                     | 90%                  | nok                | nok                 | nok                    |
 | **Forwarder: RFID part**         | LH Cargo               | SEPARATED               | SEPARATED            | SEPARATED          | SEPARATED           | SEPARATED              |
 | **Carrier: core transport**      | LH Cargo               | 95%                     | 95%                  | 95%                | 20%                 | nok                    |
@@ -177,7 +177,7 @@ Today in air cargo, tracking information is typically provided at the shipment l
 
 ### Business Process overview
 
-Remark: For the business interaction, all ONE Record data sharing is displayed as a separte swimlane. This is not to be interpreted as a single server or storage. It includes all de-central ONE Record servers by the different stakeholders. 
+Remark: For the business interaction, all ONE Record data sharing is displayed as a separte swimlane. This is not to be interpreted as a single server or storage. It includes all de-central ONE Record servers by the different stakeholders. The API features Subscribe and access delegation or only mentioned in the core activity towards customs (see blue box), while publish notificiations are consequently entered, setting subscriptions as a precondition, that is not explicitly mentioned.
 
 ```mermaid
 sequenceDiagram
@@ -201,6 +201,10 @@ sequenceDiagram
     Forwarder->>Forwarder: Check data, perform planning (updates)
     Forwarder->>Forwarder: CREATE or PATCH Waybill(MAWB/HAWB), ULDs
     deactivate Forwarder
+    rect rgb(230,245,255)
+        Forwarder->>Customs: AccessDelegation Pieces (& other objects)
+        Forwarder->>Customs: Subscription on Pieces (& other objects)
+    end
     Forwarder->>CHA Export: Notification for creation of Waybills, ULDs
     Forwarder->>Customs: Notification for creation of Waybills, ULDs
     Forwarder->>Carrier: Notification for creation of Waybills, ULDs
@@ -250,6 +254,7 @@ sequenceDiagram
         Shipper->>Carrier: Notification for update of customs presentation status
         Carrier-->>Consignee: Deliver shipment
     end 
+
 
 
 ```
