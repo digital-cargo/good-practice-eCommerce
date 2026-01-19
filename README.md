@@ -1014,7 +1014,8 @@ The following JSON example illustrates an `api:AccessDelegation` request used to
       "@id": "https://{{shipperDomain}}/logistics-objects/pieceID"
     }
   ]
-}```
+}
+```
 
 
 
