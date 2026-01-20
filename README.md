@@ -67,30 +67,6 @@ api-endpoints:
 
 This repository contains the good practice to implement data exchange in the context of eCommerce air cargo based on the ONE Record standard.
 
-## DELME: STATUS / Open Issues
-
-- PUB/SUB examples // Standardize wording "triggered by PUB/SUB?" by "publication?"
-- Replace placeholders for servers
-- Add Access Delegation in Sequence Diagram
-- RFID to be extracted: potential for other application when 1R URI written into Tag 
-- Use of Milestones for customs statuses (=> Diskussion mit Niclas)
-- CHECK Name: Change to Standard, not clear yet
-- Cascading PUB/SUB? Reicht es, auf das Piece subscribed zu sein, um über das Customs CheckLO notifiziert zu werden, wenn Customs einen Backlink fordert
-
-
-## DELME: Status
-
-| **Step**                         | **Implementing party** | **AP1.2: Process Description** | **AP1.2: Sequence Diagram** | **AP1.2: LO Description** | **AP1.2: API Feature application** | **AP1.3: Postman Collection, Test-Execution, etc** | 
-|----------------------------------|------------------------|-------------------------|----------------------|--------------------|---------------------|------------------------|
-| **eCom Shipper: Data provision** | CHI                    | 90%                     | 100%                  | nok                | nok                 | nok                    |
-| **Customs: PLACI**               | LH Cargo               | 100%                     | 100%                  | 100%                | nok                 | nok                    |
-| **Forwarder: BU**                | Schenker               | nok                     | 90%                  | nok                | nok                 | nok                    |
-| **Forwarder: RFID part**         | LH Cargo               | SEPARATED               | SEPARATED            | SEPARATED          | SEPARATED           | SEPARATED              |
-| **Carrier: core transport**      | LH Cargo               | 95%                     | 95%                  | 95%                | 20%                 | nok                    |
-| **Customs: presentation status** | LH Cargo               | 50%                     | 50%                  | 80%                | 50%                 | nok                    |
-| **GHA Import**                   | CHI                    | 90%                     | 90%                  | nok                | nok                 | nok                    |
-
-
 ## Abstract
 
 ECommerce is a constantly growing commodity with unprecidented challenges to both, the physical handling and the data management to ensure compliance, safety and efficiency. But the logistics and cargo industry grapples with a prevalent and pressing issue: there is no standard to share eCommerce data sharing throughout the supply chain. The consequence of this lack of standardization is evident: stakeholders are burdened with the expensive and time-consuming task of individualized integrations, harmonization of incompatible data formats from different sources, leading to compliance issues, inefficiencies, misunderstandings, and subsequent maintenance costs. The ONE record standard remedies this situation. This good practice document describes a sequence of required steps to share eCommerce data via ONE Record. 
