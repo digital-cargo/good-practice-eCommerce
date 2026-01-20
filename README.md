@@ -555,7 +555,6 @@ An additional level of physical consolidation are the parcels, that contain one 
 To make data easier to understand, the prefix does not only contain the ONE Record Logistics objects type, but also the a component identifying the function of the pieces ("parcel").
 
 At this point of time, a backlink in the item to the piece ("inPiece"-Data field) must also be set via a patch request. 
-
  
 This section provides the process description for the Shipper’s responsibilities, aligned with the data structures described in the following chapters (“Product”, “Item”, “Pieces”) and the sequence diagram.
  
@@ -1011,7 +1010,7 @@ The following JSON example illustrates an `api:AccessDelegation` request used to
 
 ### Carrier´s process and data
 
-n this good practice, the carrier is responsible for the core air transport and – in our scenario – also executes the import-side handling up to and including the completion of the customs presentation process.
+In this good practice, the carrier is responsible for the core air transport and – in our scenario – also executes the import-side handling up to and including the completion of the customs presentation process.
 
 The carrier’s ONE Record responsibilities in this context are:
 
@@ -1333,16 +1332,16 @@ See [CONTRIBUTING](CONTRIBUTING.md) for more details on how to contribute on thi
 ### Issues
 Issues related to this good practice are tracked on GitHub
 
-- [View open issues](https://github.com/digital-cargo/good-practice-shipment-tracking/issues)
-- [Create a new issue](https://github.com/digital-cargo/good-practice-shipment-tracking/issues/new)
+- [View open issues](https://github.com/digital-cargo/good-practice-eCommerce/issues)
+- [Create a new issue](https://github.com/digital-cargo/good-practice-eCommerce/issues/new)
 
 ### Maintainers
 
 > Each good practice MUST have at least one maintainer who is responsible for ongoing development and quality assurance. 
 > Every maintainer MUST have commit access to the good practice repository.
 
-- [Oliver Ditz](https://github.com/oditz), Fraunhofer IML 
 - [Philipp Billion](https://github.com/DrPhilippBillion), Lufthansa Cargo
+- [Oliver Ditz](https://github.com/oditz), Fraunhofer IML 
 
 _(sorted alphabetically)_
 
@@ -1353,8 +1352,10 @@ _(sorted alphabetically)_
 
 Main contributions were performed by 
 
-- [Oliver Ditz](https://github.com/oditz) of Fraunhofer IML,
 - [Philipp Billion](https://github.com/DrPhilippBillion) of Lufthansa Cargo, 
-- [Milfat Mendoughe](https://github.com/Milfat-M) of CHI Cargo,
-- [Christopher Enriquez Urban](https://github.com/Chrisenur) of Fraunhofer IML, as well as 
+- [Oliver Ditz](https://github.com/oditz) of Fraunhofer IML,
+- [Christopher Enriquez Urban](https://github.com/Chrisenur) of Fraunhofer IML, 
+- [Milfat Mendoughe](https://github.com/Milfat-M) of CHI Cargo, as well as
 - [Oliver Meschkov](https://github.com/Meschkov) of CHI Cargo
+
+_(sorted alphabetically)_
