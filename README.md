@@ -93,9 +93,9 @@ This repository contains the good practice to implement data exchange in the con
 
 ## Abstract
 
-ECommerce is a constantly growing commodity with unprecidented challengedes to both, the physical handling and the data management to ensure compliance, safety and efficiency. But the logistics and cargo industry grapples with a prevalent and pressing issue: there is no standard to share eCommerce data sharing throughout the supply chain. The consequence of this lack of standardization is evident: stakeholders are burdened with the expensive and time-consuming task of individualized integrations, harmonization of incompatible data formats from different sources, leading to compliance issues, inefficiencies, misunderstandings, and subsequent maintenance costs. The ONE record standard remedies this situation. This good practice document describes a sequence of required steps to share eCommerce data via ONE Record. 
+ECommerce is a constantly growing commodity with unprecidented challenges to both, the physical handling and the data management to ensure compliance, safety and efficiency. But the logistics and cargo industry grapples with a prevalent and pressing issue: there is no standard to share eCommerce data sharing throughout the supply chain. The consequence of this lack of standardization is evident: stakeholders are burdened with the expensive and time-consuming task of individualized integrations, harmonization of incompatible data formats from different sources, leading to compliance issues, inefficiencies, misunderstandings, and subsequent maintenance costs. The ONE record standard remedies this situation. This good practice document describes a sequence of required steps to share eCommerce data via ONE Record. 
 
-Based on the ONE Record API version 2.x.x and the ONE Record Data Model version 3.x,x, this document provides guidance on how to share eCommerce data in an easy-to-use and standardized manner.
+Based on the ONE Record API version 2.2.0 and the ONE Record Data Model version 3.2.0, this document provides guidance on how to share eCommerce data in an easy-to-use and standardized manner.
 
 This good practice is an outcome of the collaboration of major stakeholders within the German "Digital Testbed Air Cargo"-Consortium, sponsored by the German Federal Ministry for Digital Transformation and Government Modernisation. Lufthansa Cargo and Fraunhofer IML were in the lead.
 
@@ -130,7 +130,7 @@ This good practice details the application of the ONE Record standard specifical
 - **Vendor-specific implementations**: This document focuses on the standard itself and does not address specific third-party tools or solutions.
 - **Complete technical specifications**: This document focuses solely on the ONE Record aspects pertinent to eCommerce data sharing and doesn't encompass the entire technical breadth of the standard.
 
-This guide is based on the published ONE Record specifications prevalent as of `xxxx-xx-xx`. 
+This guide is based on the published ONE Record specifications prevalent as of `2025-07`. 
 As the industry evolves, it is imperative for stakeholders to keep up to date on subsequent versions or changes to the standard.
 
 **Target audience**
@@ -143,10 +143,6 @@ A `shipment` is defined as pieces under one contract and is not limited to the A
 
 A `piece` refers to an individual item or unit of cargo that is part of a larger shipment. It could be a single package, container, pallet, or any other distinct physical unit.
 
-An `item`....
-
-A `parcel`....
-
 `CHA`: Ground Handling Agent
 
 **Geographical coverage**
@@ -156,13 +152,12 @@ This eCommerce data sharing best practice is globally applicable, unhindered by 
 ### Variants
 
 This section explores different scenarios within the context of the ONE Record Standard, delineating various approaches to data exchange in the realm of eCommerce data sharing. These scenarios encompass diverse arrangements of data sharing and update processes among stakeholders involved in the logistics and cargo industry.
-(...)
 
 ## Background
 
 ### ONE Record Standard
 
-This good practice incorporates data classes of the [ONE Record cargo ontology v3.0.0](https://onerecord.iata.org/ns/cargo) and the [ONE Record core code lists ontology v0.0.3](https://onerecord.iata.org/ns/coreCodeLists). Furthermore, it utilises the [ONE Record API specificaiton v2.0.0](https://iata-cargo.github.io/ONE-Record/).
+This good practice incorporates data classes of the [ONE Record cargo ontology v3.2.0](https://onerecord.iata.org/ns/cargo) and the [ONE Record core code lists ontology v1.0.1](https://onerecord.iata.org/ns/coreCodeLists). Furthermore, it utilises the [ONE Record API specificaiton v2.2.0](https://iata-cargo.github.io/ONE-Record/).
 
 ### Related Good Practices
 
@@ -170,14 +165,14 @@ The [ShipmentTracking](https://github.com/digital-cargo/good-practice-shipment-t
 
 ### Piece-centricity and physics-orientation
 
-Today in air cargo, tracking information is typically provided at the shipment level, but the ONE Record data model follows the principle of piece-centricity as a core design principle.Another design principle of ONE Record is its aim to reflect the actual physical world, its objects and activities. Both principles find perfect application at the eCommerce use case. 
+Today in air cargo, tracking information is typically provided at the shipment level, but the ONE Record data model follows the principle of piece-centricity as a core design principle. Another design principle of ONE Record is its aim to reflect the actual physical world, its objects and activities. Both principles find perfect application at the eCommerce use case. 
 
 
 ## Business Process and Data Sharing
 
 ### Business Process overview
 
-Remark: For the business interaction, all ONE Record data sharing is displayed as a separte swimlane. This is not to be interpreted as a single server or storage. It includes all de-central ONE Record servers by the different stakeholders. The API features Subscribe and access delegation or only mentioned in the core activity towards customs (see blue box), while publish notificiations are consequently entered, setting subscriptions as a precondition, that is not explicitly mentioned.
+Remark: For the business interaction, all ONE Record data sharing is displayed as a separate swimlane. This is not to be interpreted as a single server or storage. It includes all de-central ONE Record servers by the different stakeholders. The API features Publish-Subscribe and access delegation are only mentioned in the core activity towards customs (see blue box), while publish notificiations are consequently entered, setting subscriptions as a precondition, that is not explicitly mentioned.
 
 ```mermaid
 sequenceDiagram
@@ -262,15 +257,10 @@ sequenceDiagram
 #### Remarks
 * The traditional Customs Declaration process is not integrated here - as it doesn´t differ from the conventional customs declaration process
 * The role "Carrier" includes the import Cargo Handling Agent role at the carrier hub, which is - usually and in this case - also the import station
-* Logististics Objects are always mentioned in plural if it is likely that more than one object is used; still most objects, like ULD can have occure as single or multiple physical entities
+* Logististics Objects are always mentioned in plural as it is likely that more than one object is used; still most objects, like ULD can occur as single or multiple physical entities
 * Updates / corrections are always possible within the process, but not explicitly mentioned here. Any stakeholder can set a Change- / Clarification request at any time, and the data owner can react accordingly; in case of changes to data, all subscribed stakeholders would get notified and could react according to their processes
 * Full line: information flow; dotted line: physical flow
 * Notifications (PUB/SUB) are only mentioned when essential for the process; further notification, e.g. for the shipper, providing a significant additional benefit through improved transparency, are not mentioned here.
-
-
-
-
-#### Remarks
 * The role "Carrier" includes the import Cargo Handling Agent role at the carrier hub, which is - in this case - also the import station 
 * Full line: physical flow
 * Dotted line: information flow
@@ -350,11 +340,11 @@ As the current data structure doesn´t provide sufficient information for genera
     },
     "@type": "product",
     "@id": "https://1r.example.com/logistics-objects/product-8cdf33e4-7629-483f-a4dd-e16c05c1630e-0",
-    "hsCode": "973348",
-    "description": "SWEATERS knitted",
+    "hsCode": "7754859",
+    "description": "ALARM CLOCKS",
     "describedObjects": [
     {
-		 "@id": "http://{shipperDomain}/logistics-objects/item-effd84fa-60e5-4729-8b25-816423f9a715-0"
+		 "@id": "http://{shipperDomain}/logistics-objects/item-d193bb65-61fa-402a-b5cf-71cd02476070-0"
     }
 }
 ```
@@ -559,7 +549,7 @@ An additional level of physical consolidation are the parcels, that contain one 
          "textualValue":"XXXXXXX"
       }
    ]
-}}
+}
 ```
 
 To make data easier to understand, the prefix does not only contain the ONE Record Logistics objects type, but also the a component identifying the function of the pieces ("parcel").
