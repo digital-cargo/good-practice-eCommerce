@@ -76,6 +76,7 @@ This repository contains the good practice to implement data exchange in the con
 - Use of Milestones for customs statuses (=> Diskussion mit Niclas)
 - CHECK Name: Change to Standard, not clear yet
 - Cascading PUB/SUB? Reicht es, auf das Piece subscribed zu sein, um über das Customs CheckLO notifiziert zu werden, wenn Customs einen Backlink fordert
+- Timing for changes to pieces and linked checkLO by custsoms required, eg. after piece update, the checklo is considered invalid for at least 30 mins 
 
 
 ## DELME: Status
