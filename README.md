@@ -1255,11 +1255,12 @@ Suggested rules for standardizing the PLACI `Check` implementation in ONE Record
 
 **CheckLO for customs inspection status**
 
-The customs inspection status is shared analogue to PLACI Check. The LO look as follows:
+The customs inspection status is shared analogue to PLACI Check. According to the above suggested procedure (Each screening must create exactly one `Check` LO and one corresponding `CheckTotalResult`) two checks are needed here. One to share the information if the presenataion is required and one to share the actual result of the presentation. The LOs look as follows:
 
+The check for the **Presentation required** status:
 ```json
 {
-    "@id": "http://{{customsDomain}}/logistics-objects/Customs-Presentation-2399393-check",
+    "@id": "http://{{customsDomain}}/logistics-objects/Customs-Presentation-2399394-check",
     "@type": "https://onerecord.iata.org/ns/cargo#Check",
     "https://onerecord.iata.org/ns/cargo#checkedObjects":[
         {
@@ -1268,7 +1269,7 @@ The customs inspection status is shared analogue to PLACI Check. The LO look as 
     ],
     "https://onerecord.iata.org/ns/cargo#checkTotalResult":[
         {
-            "@id": "https://1r.example.com/logistics-objects/Customs-Presentation-2399393-result"
+            "@id": "https://1r.example.com/logistics-objects/Customs-Presentation-2399394-result"
         }
     ],
     "https://onerecord.iata.org/ns/cargo#checker": "1r.zoll.de",
@@ -1276,20 +1277,56 @@ The customs inspection status is shared analogue to PLACI Check. The LO look as 
 }
 ```
 
-Additional to the check, the checkResult cotains the result of the check.  
+Additional to the check, the checkResult contains the result of the check.  
 
 ```json
 {
-    "@id": "http://{{customsDomain}}/logistics-objects/Customs-Presentation-2399393-result",
+    "@id": "http://{{customsDomain}}/logistics-objects/Customs-Presentation-2399394-result",
     "@type": "https://onerecord.iata.org/ns/cargo#CheckTotalResult",
     "https://onerecord.iata.org/ns/cargo#resultOfCheck":[
         {
-            "@id": "http://{{customsDomain}}/logistics-objects/Customs-Presentation-2399393-check"
+            "@id": "http://{{customsDomain}}/logistics-objects/Customs-Presentation-2399394-check"
         }
     ],
     "https://onerecord.iata.org/ns/cargo#checkRemark": "NO PRESENTATION REQUIRED"
 }
 ```
+The check for the **result of the presentation** status:
+```json
+{
+    "@id": "http://{{customsDomain}}/logistics-objects/Customs-Presentation-2399395-check",
+    "@type": "https://onerecord.iata.org/ns/cargo#Check",
+    "https://onerecord.iata.org/ns/cargo#checkedObjects":[
+        {
+            "@id": "https://1r.example.com/logistics-objects/piece-XXXXXXXX"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#checkTotalResult":[
+        {
+            "@id": "https://1r.example.com/logistics-objects/Customs-Presentation-2399395-result"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#checker": "1r.zoll.de",
+    "https://onerecord.iata.org/ns/cargo#actionEndTime": "xxxxxx"
+}
+```
+
+Additional to the check, the checkResult contains the result of the check.  
+
+```json
+{
+    "@id": "http://{{customsDomain}}/logistics-objects/Customs-Presentation-2399395-result",
+    "@type": "https://onerecord.iata.org/ns/cargo#CheckTotalResult",
+    "https://onerecord.iata.org/ns/cargo#resultOfCheck":[
+        {
+            "@id": "http://{{customsDomain}}/logistics-objects/Customs-Presentation-2399395-check"
+        }
+    ],
+    "https://onerecord.iata.org/ns/cargo#checkRemark": "CLEARED_FOR_IMPORT"
+}
+```
+
+
 ## Further optimization potential
 
 ### Potential beyond the 7+1 data elements
