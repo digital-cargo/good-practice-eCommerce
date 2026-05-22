@@ -9,6 +9,7 @@ sequenceDiagram
     participant CHA Export
     participant Customs
     participant Carrier
+    participant GHA
     participant Consignee
     participant CCS
 
@@ -73,6 +74,8 @@ sequenceDiagram
     activate Carrier
     Carrier->>Shipper: PATCH Status Update DEP into Pieces (Event)
     Carrier-->>Carrier: Perform flight (DEP, ARR) and unload
+    GHA-->>Carrier: Perform transport from flight position to warehous
+	GHA-->>Carrier: PATCH Status Update ... into UnitLoadDevice (LogisticEvents) -> one per ULD or loose AWB
     Carrier->>Customs: GET customs presentation status (latest update)
     CCS->>Shipper: GET status information (LogisticEvents)
     deactivate Carrier
