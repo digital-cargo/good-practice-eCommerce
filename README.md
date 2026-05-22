@@ -130,6 +130,8 @@ This good practice details the application of the ONE Record standard specifical
 - **Comparison with other standards**: This good practice describes the implementation with the ONE Record Standard. A comparison with other standards in the industry is not covered.
 - **Vendor-specific implementations**: This document focuses on the standard itself and does not address specific third-party tools or solutions.
 - **Complete technical specifications**: This document focuses solely on the ONE Record aspects pertinent to eCommerce data sharing and doesn't encompass the entire technical breadth of the standard.
+- **Change Management for different parties**: This good practice focuses on the as is data interpretation with the covered standard - there are only hints what is interpreted nowadays.
+
 
 This guide is based on the published ONE Record specifications prevalent as of `2025-07`. 
 As the industry evolves, it is imperative for stakeholders to keep up to date on subsequent versions or changes to the standard.
@@ -144,7 +146,7 @@ A `shipment` is defined as pieces under one contract and is not limited to the A
 
 A `piece` refers to an individual item or unit of cargo that is part of a larger shipment. It could be a single package, container, pallet, or any other distinct physical unit.
 
-`CHA`: Ground Handling Agent
+`CHA`: Cargo Handling Agent - a specialized agent to manage, process, and secure freight at transportation hubs. They act on behalf of airlines, shipping lines, or operators to facilitate the physical and administrative flow of goods. Can include the ground handling processes. For the use cases described in this good practice, there are two parties (e.g. at Frankfurt Airport) that provide the service in the supply chain. CHA (cargo handling agent) and GHA (ground handling agent) for apron transportation of goods. When needed we split this role further on.
 
 **Geographical coverage**
 
@@ -166,7 +168,7 @@ The [ShipmentTracking](https://github.com/digital-cargo/good-practice-shipment-t
 
 ### Piece-centricity and physics-orientation
 
-Today in air cargo, tracking information is typically provided at the shipment level, but the ONE Record data model follows the principle of piece-centricity as a core design principle. Another design principle of ONE Record is its aim to reflect the actual physical world, its objects and activities. Both principles find perfect application at the eCommerce use case. 
+Today in air cargo, tracking information is typically provided at the shipment level, but the ONE Record data model follows the principle of piece-centricity as a core design principle. Another design principle of ONE Record is its aim to reflect the actual physical world, its objects and activities. Both principles find perfect application at the eCommerce use case. All parties e.g. customs has to change their point of view to a better transparency.
 
 
 ## Business Process and Data Sharing
@@ -186,6 +188,7 @@ sequenceDiagram
     participant CHA Export
     participant Customs
     participant Carrier
+	participant GHA
     participant Consignee
 
     activate Shipper
@@ -240,6 +243,8 @@ sequenceDiagram
     activate Carrier
     Carrier->>Shipper: PATCH Status Update DEP into Pieces (Event)
     Carrier-->>Carrier: Perform flight (DEP, ARR) and unload
+	GHA-->>Carrier: Perform transport from flight position to warehous
+	GHA-->>Carrier: PATCH Status Update ... into UnitLoadDevice (LogisticEvents) -> one per ULD or loose AWB
     Carrier->>Customs: GET customs presentation status (latest update)
     deactivate Carrier
 
@@ -814,7 +819,7 @@ The backlink in the pieces must also be set in the "inPiece"-data field.
 
 **Shipment**
 
-As a next steps of the forwarder´s part in the process is to negotiate the AWB with the carrier and attribute the pieces to this contract as well as handing over the physical side of the shipment to the carrier. As an specific agreement for our setting, one Master AWB equals one ULD, and HAWB data structure are not used here. This is a workaround for a lack of transparency on the attribution of pieces to ULDs. ONE Record could solve this problem in a better way by reflecting the physical world with correct linking of pieces to the ULD, but as we are trying to implement the current data exchange in ONE Record, we´ll follow the given frame conditions.
+As a next steps of the forwarder´s part in the process is to negotiate the AWB with the carrier and attribute the pieces to this contract as well as handing over the physical side of the shipment to the carrier. As an specific agreement for our setting, one Master AWB equals one ULD, and HAWB **(MHA: for data process of customs - HAWB is needed at the moment)** data structure are not used here. This is a workaround for a lack of transparency on the attribution of pieces to ULDs. ONE Record could solve this problem in a better way by reflecting the physical world with correct linking of pieces to the ULD, but as we are trying to implement the current data exchange in ONE Record, we´ll follow the given frame conditions.
 
 The Shipment - as the physical side of the pieces under one contract - typically looks like this:
 
@@ -1017,6 +1022,7 @@ The carrier’s ONE Record responsibilities in this context are:
 
 - providing the air `TransportMovement` (flight segment),
 - providing the corresponding `Loading` activity (linking `ULDs` and `flight`),
+- provicding the corresponting 'LogisticEvents' for apron transports and import handling warehouse arrival
 - consuming and acting on customs-related `Checks` (PLACI and customs presentation).
 
 
