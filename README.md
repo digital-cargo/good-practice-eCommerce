@@ -116,7 +116,7 @@ The purpose of this document is to explain how eCommerce data can be shared most
 
 ### Scope
 
-This good practice details the application of the ONE Record standard specifically in the context of eCommerce data sharing. By using this good practice, organizations can understand, adopt, and streamline their eCommerce offering to global best practice.
+This good practice details the application of the ONE Record standard specifically in the context of eCommerce data sharing. By using this good practice, organizations can understand, adopt, and streamline their eCommerce offering to global best practice. For complexity reasons, some participant roles are summarized although it is not a real participant situation - simplifications are noted.
 
 **What this document covers:**
 
@@ -130,6 +130,8 @@ This good practice details the application of the ONE Record standard specifical
 - **Comparison with other standards**: This good practice describes the implementation with the ONE Record Standard. A comparison with other standards in the industry is not covered.
 - **Vendor-specific implementations**: This document focuses on the standard itself and does not address specific third-party tools or solutions.
 - **Complete technical specifications**: This document focuses solely on the ONE Record aspects pertinent to eCommerce data sharing and doesn't encompass the entire technical breadth of the standard.
+- **Change Management for different parties**: This good practice focuses on the as is data interpretation with the covered standard - there are only hints what is interpreted nowadays.
+
 
 This guide is based on the published ONE Record specifications prevalent as of `2025-07`. 
 As the industry evolves, it is imperative for stakeholders to keep up to date on subsequent versions or changes to the standard.
@@ -144,7 +146,7 @@ A `shipment` is defined as pieces under one contract and is not limited to the A
 
 A `piece` refers to an individual item or unit of cargo that is part of a larger shipment. It could be a single package, container, pallet, or any other distinct physical unit.
 
-`CHA`: Ground Handling Agent
+`CHA`: Cargo Handling Agent - a specialized agent to manage, process, and secure freight at transportation hubs. They act on behalf of airlines, shipping lines, or operators to facilitate the physical and administrative flow of goods. Can include the ground handling processes. For the use cases described in this good practice, there are two parties (e.g. at Frankfurt Airport) that provide the service in the supply chain. CHA (cargo handling agent) and GHA (ground handling agent) for apron transportation of goods. When needed we split this role further on.
 
 **Geographical coverage**
 
@@ -166,7 +168,7 @@ The [ShipmentTracking](https://github.com/digital-cargo/good-practice-shipment-t
 
 ### Piece-centricity and physics-orientation
 
-Today in air cargo, tracking information is typically provided at the shipment level, but the ONE Record data model follows the principle of piece-centricity as a core design principle. Another design principle of ONE Record is its aim to reflect the actual physical world, its objects and activities. Both principles find perfect application at the eCommerce use case. 
+Today in air cargo, tracking information is typically provided at the shipment level, but the ONE Record data model follows the principle of piece-centricity as a core design principle. Another design principle of ONE Record is its aim to reflect the actual physical world, its objects and activities. Both principles find perfect application at the eCommerce use case. All parties e.g. customs has to change their point of view for gaining a better transparency.
 
 
 ## Business Process and Data Sharing
@@ -214,6 +216,8 @@ sequenceDiagram
     Carrier->>Forwarder: GET Waybills, ULDs
     Carrier->>Shipper: GET Pieces, Items
     Carrier->>Carrier: Check data, perform planning (updates)
+	Customs->>Forwarder: GET Waybills, ULDs
+    Customs->>Shipper: GET Pieces, Items
     Customs->>Customs: CREATE check for placi status
     Customs->>Shipper: PATCH placi status into Piece
     Shipper->>Forwarder: Notification for update of placi check
@@ -240,6 +244,9 @@ sequenceDiagram
     activate Carrier
     Carrier->>Shipper: PATCH Status Update DEP into Pieces (Event)
     Carrier-->>Carrier: Perform flight (DEP, ARR) and unload
+	Carrier-->>Carrier: Perform transport from flight position to warehouse
+	Carrier->>Shipper: PATCH Status Update GHA_Started, GHA_Ended and FWI (GHA transports and NOA) into Pieces (Event - LogisticEvents)
+	Customs->>Shipper: GET Status Information for arrival, apron processes and goods received at warehouse
     Carrier->>Customs: GET customs presentation status (latest update)
     deactivate Carrier
 
@@ -258,11 +265,11 @@ sequenceDiagram
 #### Remarks
 * The traditional Customs Declaration process is not integrated here - as it doesn´t differ from the conventional customs declaration process
 * The role "Carrier" includes the import Cargo Handling Agent role at the carrier hub, which is - usually and in this case - also the import station
+* The role "Carrier" includes the Ground Handling Agent role at the carrier hub, which is
 * Logististics Objects are always mentioned in plural as it is likely that more than one object is used; still most objects, like ULD can occur as single or multiple physical entities
 * Updates / corrections are always possible within the process, but not explicitly mentioned here. Any stakeholder can set a Change- / Clarification request at any time, and the data owner can react accordingly; in case of changes to data, all subscribed stakeholders would get notified and could react according to their processes
 * Full line: information flow; dotted line: physical flow
-* Notifications (PUB/SUB) are only mentioned when essential for the process; further notification, e.g. for the shipper, providing a significant additional benefit through improved transparency, are not mentioned here.
-* The role "Carrier" includes the import Cargo Handling Agent role at the carrier hub, which is - in this case - also the import station 
+* Notifications (PUB/SUB) are only mentioned when essential for the process; further notification, e.g. for the shipper, providing a significant additional benefit through improved transparency, are not mentioned here. 
 * Full line: physical flow
 * Dotted line: information flow
 * Notifications (PUB/SUB) are only mentioned when essential for the process; further notification, e.g. for the shipper, providing a significant additional benefit through improved transparency, are not mentioned here.
@@ -814,7 +821,7 @@ The backlink in the pieces must also be set in the "inPiece"-data field.
 
 **Shipment**
 
-As a next steps of the forwarder´s part in the process is to negotiate the AWB with the carrier and attribute the pieces to this contract as well as handing over the physical side of the shipment to the carrier. As an specific agreement for our setting, one Master AWB equals one ULD, and HAWB data structure are not used here. This is a workaround for a lack of transparency on the attribution of pieces to ULDs. ONE Record could solve this problem in a better way by reflecting the physical world with correct linking of pieces to the ULD, but as we are trying to implement the current data exchange in ONE Record, we´ll follow the given frame conditions.
+As a next steps of the forwarder´s part in the process is to negotiate the AWB with the carrier and attribute the pieces to this contract as well as handing over the physical side of the shipment to the carrier. As an specific agreement for our setting, one Master AWB equals one ULD, and HAWB **(MHA: for data process of customs - HAWB is needed at the moment)** data structure are not used here. This is a workaround for a lack of transparency on the attribution of pieces to ULDs. ONE Record could solve this problem in a better way by reflecting the physical world with correct linking of pieces to the ULD, but as we are trying to implement the current data exchange in ONE Record, we´ll follow the given frame conditions.
 
 The Shipment - as the physical side of the pieces under one contract - typically looks like this:
 
@@ -1017,6 +1024,7 @@ The carrier’s ONE Record responsibilities in this context are:
 
 - providing the air `TransportMovement` (flight segment),
 - providing the corresponding `Loading` activity (linking `ULDs` and `flight`),
+- providing the corresponding 'LogisticEvents' for apron transports and import handling warehouse arrival
 - consuming and acting on customs-related `Checks` (PLACI and customs presentation).
 
 
@@ -1136,6 +1144,7 @@ In a ONE Record architecture, Customs typically consumes data by pulling it from
 As this Good Practice focuses on the application of this In this good practice, the **Forwarder ensures that Customs is subscribed to the Shipper’s `Piece` logistics objects**, so that Customs is notified whenever relevant data becomes available or is updated.
 
 This approach reflects today’s operational reality, where the Forwarder coordinates regulatory readiness while the Shipper remains the authoritative data owner for piece-level information.
+The underlying system that is providing the information for Customs can be a Cargo Community System (CCS). In the special case of the eCommerce use case, where in different processes the overall status tracking of a shipment/piece is needed, is that the case.
 
 #### Recommended subscription topics
 
