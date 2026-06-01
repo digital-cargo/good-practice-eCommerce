@@ -265,7 +265,7 @@ sequenceDiagram
 #### Remarks
 * The traditional Customs Declaration process is not integrated here - as it doesn´t differ from the conventional customs declaration process
 * The role "Carrier" includes the import Cargo Handling Agent role at the carrier hub, which is - usually and in this case - also the import station
-* The role "Carrier" includes the Ground Handling Agent role at the carrier hub, which is
+* The role "Carrier" includes the Ground Handling Agent role at the carrier hub
 * Logististics Objects are always mentioned in plural as it is likely that more than one object is used; still most objects, like ULD can occur as single or multiple physical entities
 * Updates / corrections are always possible within the process, but not explicitly mentioned here. Any stakeholder can set a Change- / Clarification request at any time, and the data owner can react accordingly; in case of changes to data, all subscribed stakeholders would get notified and could react according to their processes
 * Full line: information flow; dotted line: physical flow
