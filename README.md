@@ -1024,7 +1024,7 @@ The carrier’s ONE Record responsibilities in this context are:
 
 - providing the air `TransportMovement` (flight segment),
 - providing the corresponding `Loading` activity (linking `ULDs` and `flight`),
-- provicding the corresponting 'LogisticEvents' for apron transports and import handling warehouse arrival
+- providing the corresponding 'LogisticEvents' for apron transports and import handling warehouse arrival
 - consuming and acting on customs-related `Checks` (PLACI and customs presentation).
 
 
