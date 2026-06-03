@@ -215,10 +215,10 @@ sequenceDiagram
     Carrier->>Shipper: GET Pieces, Items, Products
     Carrier->>Carrier: Check data, perform planning (updates)
     Customs->>Customs: CREATE check for placi status
-    Customs->>Shipper: PATCH placi status into Piece
-    Shipper->>Forwarder: Notification for update of placi check
-    Shipper->>CHA Export: Notification for update of placi check
-    Shipper->>Carrier: Notification for update of placi check
+    Customs->>Shipper: PATCH placi status into Piece  & AccessDelegation for checkLO
+    Shipper->>Forwarder: Notification & AccessDelegation for update of placi check
+    Shipper->>CHA Export: Notification & AccessDelegation for update of placi check
+    Shipper->>Carrier: Notification & AccessDelegation for update of placi check
 
     Shipper-->>Forwarder: Provide physical freight (Pieces)
     activate Forwarder
