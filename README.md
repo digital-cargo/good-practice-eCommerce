@@ -195,7 +195,7 @@ sequenceDiagram
     Shipper->>Forwarder: Notification for creation of Pieces
     deactivate Shipper
     activate Forwarder
-    Forwarder->>Shipper: GET Pieces, Items
+    Forwarder->>Shipper: GET Pieces, Items, Products
     Forwarder->>Forwarder: Check data, perform planning (updates)
     Forwarder->>Forwarder: CREATE or PATCH Waybill(MAWB/HAWB), ULDs
        rect rgb(230,245,255)
@@ -209,20 +209,20 @@ sequenceDiagram
     Forwarder->>Customs: Notification for creation of Waybills, ULDs
     Forwarder->>Carrier: Notification for creation of Waybills, ULDs
     CHA Export->>Forwarder: GET Waybills, ULDs
-    CHA Export->>Shipper: GET Pieces, Items
+    CHA Export->>Shipper: GET Pieces, Items, Products
     CHA Export->>CHA Export: Check data, perform planning (updates)
     Customs->>Forwarder: GET Waybills, ULDs
-    Customs->>Shipper: GET Pieces, Items
+    Customs->>Shipper: GET Pieces, Items, Products
     Carrier->>Forwarder: GET Waybills, ULDs
-    Carrier->>Shipper: GET Pieces, Items
+    Carrier->>Shipper: GET Pieces, Items, Products
     Carrier->>Carrier: Check data, perform planning (updates)
 	Customs->>Forwarder: GET Waybills, ULDs
     Customs->>Shipper: GET Pieces, Items
     Customs->>Customs: CREATE check for placi status
-    Customs->>Shipper: PATCH placi status into Piece
-    Shipper->>Forwarder: Notification for update of placi check
-    Shipper->>CHA Export: Notification for update of placi check
-    Shipper->>Carrier: Notification for update of placi check
+    Customs->>Shipper: PATCH placi status into Piece  & AccessDelegation for checkLO
+    Shipper->>Forwarder: Notification & AccessDelegation for update of placi check
+    Shipper->>CHA Export: Notification & AccessDelegation for update of placi check
+    Shipper->>Carrier: Notification & AccessDelegation for update of placi check
 
     Shipper-->>Forwarder: Provide physical freight (Pieces)
     activate Forwarder
